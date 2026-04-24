@@ -26,7 +26,7 @@ class IntroPage2 extends StatelessWidget {
           Container(
             padding: EdgeInsets.only(left: 35),
             child: const Text(
-              "Message The seller directly through the platform.No middle man.No delays - just simple campus conversation ",
+              "Message sellers directly. No middlemen, no delays—just simple and secure conversations. ",
               style: TextStyle(
                 color: Colors.white, 
                 fontSize: 19, 
