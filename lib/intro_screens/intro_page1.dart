@@ -28,7 +28,7 @@ class IntroPage1 extends StatelessWidget {
           Container(
              padding: EdgeInsets.only(left: 35),
             child: const Text(
-              "Explore items listed",
+              "From real estate and cars to electronics and jobs, find exactly what you are looking for in your city.",
               style: TextStyle(
                 color: Colors.white, 
                 fontSize:19, 
