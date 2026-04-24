@@ -28,7 +28,7 @@ class IntroPage3 extends StatelessWidget {
           Container(
              padding: EdgeInsets.only(left: 35),
             child: const Text(
-              "Arrange a safe on campus meetup to complete the transaction.fast trusted and always nearby!",
+              "Arrange safe local meetups or property viewings. Turn your unwanted items into cash today!",
               style: TextStyle(
                 color: Colors.white, 
                 fontSize: 19, 
