@@ -1,10 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:smooth_page_indicator/smooth_page_indicator.dart';
-import 'package:yalla_safqa/intro_screens/intro_page1.dart';
-import 'package:yalla_safqa/intro_screens/intro_page2.dart';
-import 'package:yalla_safqa/intro_screens/intro_page3.dart';
-// Important: Make sure to import your main store or login page here!
-import 'package:yalla_safqa/login.dart';
+import 'package:FoundIT/intro_screens/intro_page1.dart';
+import 'package:FoundIT/intro_screens/intro_page2.dart';
+import 'package:FoundIT/intro_screens/intro_page3.dart';
+import 'package:FoundIT/login.dart';
 
 class OnBoardingScreen extends StatefulWidget {
   const OnBoardingScreen({super.key});
@@ -14,15 +13,12 @@ class OnBoardingScreen extends StatefulWidget {
 }
 
 class _OnBoardingScreenState extends State<OnBoardingScreen> {
-  // Keep track of page we are in
   final PageController _controller = PageController();
 
-  // Keep track of if we are on last page or not
   bool onLastPage = false;
 
   @override
   void dispose() {
-    // It is best practice to dispose of controllers to prevent memory leaks
     _controller.dispose();
     super.dispose();
   }
@@ -36,7 +32,6 @@ class _OnBoardingScreenState extends State<OnBoardingScreen> {
             controller: _controller,
             onPageChanged: (index) {
               setState(() {
-                // FIX 1: Removed the curly braces
                 onLastPage = (index == 2);
               });
             },
@@ -44,13 +39,11 @@ class _OnBoardingScreenState extends State<OnBoardingScreen> {
           ),
 
           Positioned.fill(
-            // IgnorePointer ensures the image doesn't block the user
-            // from swiping the screen underneath it.
             child: IgnorePointer(
               child: Image.asset(
                 "assets/img/whitec.png",
                 fit: BoxFit
-                    .fill, // Stretches the image to perfectly hit all 4 corners
+                    .fill,
               ),
             ),
           ),
@@ -60,7 +53,6 @@ class _OnBoardingScreenState extends State<OnBoardingScreen> {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
-                // SKIP BUTTON
                 GestureDetector(
                   onTap: () {
                     _controller.jumpToPage(2);
@@ -75,18 +67,14 @@ class _OnBoardingScreenState extends State<OnBoardingScreen> {
                   ),
                 ),
 
-                // DOT INDICATOR
                 SmoothPageIndicator(controller: _controller, count: 3),
 
-                // NEXT / GET STARTED BUTTON
                 onLastPage
                     ? GestureDetector(
                         onTap: () {
-                          // FIX 2: Navigate away from the onboarding screen to the main app
                           Navigator.pushReplacement(
                             context,
                             MaterialPageRoute(
-                              // Replace FoodStoreApp() with whatever your home screen class is named
                               builder: (context) => const LoginScreen(),
                             ),
                           );

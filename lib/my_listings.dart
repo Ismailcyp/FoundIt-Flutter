@@ -3,7 +3,7 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:yalla_safqa/item_details.dart'; // Ensure this path matches your project!
+import 'package:FoundIT/item_details.dart';
 
 class MyListingsScreen extends StatefulWidget {
   const MyListingsScreen({super.key});
@@ -13,14 +13,15 @@ class MyListingsScreen extends StatefulWidget {
 }
 
 class _MyListingsScreenState extends State<MyListingsScreen> {
-  final Color _bgColor = const Color.fromARGB(255, 38, 2, 58);
-  final Color _cardColor = const Color(0xFF1B1B28);
-  final Color _primaryPurple = const Color(0xFF6E56FF);
-  final Color _textSecondary = const Color(0xFF8E8E9F);
+  final Color _textColor = const Color(0xFF1E1E1E);
+  final Color _subtitleColor = const Color(0xFF8E8E8E);
 
   Widget _decodeAndDisplayImage(List<dynamic> images) {
     if (images.isEmpty) {
-      return Container(color: _bgColor, child: const Center(child: Icon(Icons.image_not_supported, color: Colors.white54)));
+      return Container(
+        color: Colors.grey.shade50,
+        child: Center(child: Icon(Icons.image_not_supported_outlined, color: Colors.grey.shade300, size: 32)),
+      );
     }
     String base64String = images[0] as String;
     if (base64String.contains(',')) {
@@ -30,23 +31,10 @@ class _MyListingsScreenState extends State<MyListingsScreen> {
       Uint8List decodedBytes = base64Decode(base64String);
       return Image.memory(decodedBytes, width: double.infinity, fit: BoxFit.cover);
     } catch (e) {
-      return Container(color: _bgColor, child: const Center(child: Icon(Icons.broken_image, color: Colors.white54)));
-    }
-  }
-
-  // --- HELPER: GET STATUS COLOR ---
-  Color _getStatusColor(String status) {
-    switch (status.toLowerCase()) {
-      case 'active':
-      case 'approved':
-        return Colors.greenAccent;
-      case 'pending':
-        return Colors.orangeAccent;
-      case 'rejected':
-      case 'flagged':
-        return Colors.redAccent;
-      default:
-        return _textSecondary;
+      return Container(
+        color: Colors.grey.shade50,
+        child: Center(child: Icon(Icons.broken_image_outlined, color: Colors.grey.shade300, size: 32)),
+      );
     }
   }
 
@@ -56,17 +44,17 @@ class _MyListingsScreenState extends State<MyListingsScreen> {
 
     return SafeArea(
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Padding(
-            padding: EdgeInsets.all(20),
+          Padding(
+            padding: const EdgeInsets.all(20),
             child: Text(
               'My Listings',
-              style: TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold),
+              style: TextStyle(color: _textColor, fontSize: 24, fontWeight: FontWeight.bold),
             ),
           ),
           Expanded(
             child: StreamBuilder<QuerySnapshot>(
-              // Query ONLY items where sellerId matches the current user!
               stream: FirebaseFirestore.instance
                   .collection('listings')
                   .where('sellerId', isEqualTo: currentUserUid)
@@ -74,11 +62,17 @@ class _MyListingsScreenState extends State<MyListingsScreen> {
                   .snapshots(),
               builder: (context, snapshot) {
                 if (snapshot.connectionState == ConnectionState.waiting) {
-                  return Center(child: CircularProgressIndicator(color: _primaryPurple));
+                  return Center(child: CircularProgressIndicator(color: Colors.green[800]));
                 }
 
                 if (snapshot.hasError) {
-                  return const Center(child: Text('Error loading your listings. Check your console for an Index link!', style: TextStyle(color: Colors.redAccent), textAlign: TextAlign.center));
+                  return Center(
+                    child: Text(
+                      'Error loading your listings.\nCheck your console for an Index link!',
+                      style: TextStyle(color: Colors.red.shade700),
+                      textAlign: TextAlign.center,
+                    ),
+                  );
                 }
 
                 final docs = snapshot.data?.docs ?? [];
@@ -88,21 +82,24 @@ class _MyListingsScreenState extends State<MyListingsScreen> {
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Icon(Icons.sell_outlined, size: 64, color: _textSecondary.withOpacity(0.5)),
+                        Icon(Icons.sell_outlined, size: 64, color: Colors.grey[300]),
                         const SizedBox(height: 16),
-                        Text("You haven't posted any items yet.", style: TextStyle(color: _textSecondary, fontSize: 16)),
+                        Text(
+                          "You haven't posted any items yet.",
+                          style: TextStyle(color: _subtitleColor, fontSize: 16, fontWeight: FontWeight.w500),
+                        ),
                       ],
                     ),
                   );
                 }
 
                 return GridView.builder(
-                  padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                  padding: const EdgeInsets.only(left: 20.0, right: 20.0, bottom: 100.0), 
                   gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                     crossAxisCount: 2,
-                    crossAxisSpacing: 12,
+                    crossAxisSpacing: 16,
                     mainAxisSpacing: 16,
-                    childAspectRatio: 0.70, // Slightly taller to fit the status badge nicely
+                    childAspectRatio: 0.68, 
                   ),
                   itemCount: docs.length,
                   itemBuilder: (context, index) {
@@ -112,11 +109,32 @@ class _MyListingsScreenState extends State<MyListingsScreen> {
                     final String title = itemData['title'] ?? 'Unnamed Item';
                     final int price = itemData['price'] ?? 0;
                     final List<dynamic> images = itemData['images'] ?? [];
-                    final String status = itemData['status'] ?? 'pending';
+                    final String rawStatus = (itemData['status'] ?? 'pending').toLowerCase();
+
+                    Color badgeTextColor;
+                    Color badgeBgColor;
+                    String displayStatus = rawStatus.toUpperCase();
+
+                    if (rawStatus == 'active' || rawStatus == 'approved') {
+                      badgeTextColor = Colors.green.shade700;
+                      badgeBgColor = Colors.green.shade50;
+                      displayStatus = 'ACTIVE';
+                    } else if (rawStatus == 'pending') {
+                      badgeTextColor = Colors.orange.shade700;
+                      badgeBgColor = Colors.orange.shade50;
+                    } else if (rawStatus == 'rejected' || rawStatus == 'flagged') {
+                      badgeTextColor = Colors.red.shade700;
+                      badgeBgColor = Colors.red.shade50;
+                    } else if (rawStatus == 'sold') {
+                      badgeTextColor = Colors.grey.shade700;
+                      badgeBgColor = Colors.grey.shade200;
+                    } else {
+                      badgeTextColor = Colors.grey.shade700;
+                      badgeBgColor = Colors.grey.shade100;
+                    }
 
                     return GestureDetector(
                       onTap: () {
-                        // Optional: Only let them view details if it's active or pending
                         Navigator.push(
                           context,
                           MaterialPageRoute(
@@ -126,77 +144,89 @@ class _MyListingsScreenState extends State<MyListingsScreen> {
                       },
                       child: Container(
                         decoration: BoxDecoration(
-                          color: _cardColor,
-                          borderRadius: BorderRadius.circular(16),
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: Colors.grey.shade200, width: 1),
                         ),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            // IMAGE + STATUS BADGE OVERLAY
                             Expanded(
-                              child: Stack(
-                                children: [
-                                  ClipRRect(
-                                    borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
-                                    child: SizedBox(
-                                      width: double.infinity,
-                                      height: double.infinity,
-                                      child: _decodeAndDisplayImage(images),
-                                    ),
+                              flex: 5,
+                              child: Container(
+                                width: double.infinity,
+                                decoration: BoxDecoration(
+                                  color: Colors.grey.shade50,
+                                  borderRadius: const BorderRadius.vertical(top: Radius.circular(11)),
+                                ),
+                                child: ClipRRect(
+                                  borderRadius: const BorderRadius.vertical(top: Radius.circular(11)),
+                                  child: Padding(
+                                    padding: const EdgeInsets.all(12.0),
+                                    child: _decodeAndDisplayImage(images),
                                   ),
-                                  
-                                  // --- THE STATUS BADGE ---
-                                  Positioned(
-                                    top: 8,
-                                    left: 8,
-                                    child: Container(
-                                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                                      decoration: BoxDecoration(
-                                        color: Colors.black.withOpacity(0.75),
-                                        borderRadius: BorderRadius.circular(12),
-                                        border: Border.all(color: _getStatusColor(status), width: 1.5),
-                                      ),
-                                      child: Text(
-                                        status.toUpperCase(),
-                                        style: TextStyle(
-                                          color: _getStatusColor(status),
-                                          fontSize: 10,
-                                          fontWeight: FontWeight.bold,
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                ],
+                                ),
                               ),
                             ),
                             
-                            // TEXT DETAILS
-                            Padding(
-                              padding: const EdgeInsets.all(12.0),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    title,
-                                    maxLines: 2,
-                                    overflow: TextOverflow.ellipsis,
-                                    style: const TextStyle(
-                                      color: Colors.white,
-                                      fontWeight: FontWeight.w600,
-                                      fontSize: 14,
-                                      height: 1.2,
+                            Expanded(
+                              flex: 4,
+                              child: Padding(
+                                padding: const EdgeInsets.all(12.0),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          title,
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                          style: const TextStyle(
+                                            color: Color(0xFF1E1E1E),
+                                            fontWeight: FontWeight.w600,
+                                            fontSize: 13,
+                                          ),
+                                        ),
+                                        const SizedBox(height: 4),
+                                        Text(
+                                          '\$$price',
+                                          style: const TextStyle(
+                                            color: Color(0xFF1E1E1E),
+                                            fontSize: 14,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+                                      ],
                                     ),
-                                  ),
-                                  const SizedBox(height: 6),
-                                  Text(
-                                    'EGP $price',
-                                    style: TextStyle(
-                                      color: _primaryPurple,
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.bold,
+                                    
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(vertical: 6),
+                                      decoration: BoxDecoration(
+                                        color: badgeBgColor,
+                                        borderRadius: BorderRadius.circular(6),
+                                      ),
+                                      child: Row(
+                                        mainAxisAlignment: MainAxisAlignment.center,
+                                        children: [
+                                          CircleAvatar(radius: 3, backgroundColor: badgeTextColor),
+                                          const SizedBox(width: 6),
+                                          Text(
+                                            displayStatus,
+                                            style: TextStyle(
+                                              color: badgeTextColor,
+                                              fontSize: 10,
+                                              fontWeight: FontWeight.w700,
+                                              letterSpacing: 0.5,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
                                     ),
-                                  ),
-                                ],
+                                  ],
+                                ),
                               ),
                             ),
                           ],

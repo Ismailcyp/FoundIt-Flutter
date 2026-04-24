@@ -17,14 +17,15 @@ class _EditListingScreenState extends State<EditListingScreen> {
   late TextEditingController _descController;
   bool _isLoading = false;
 
-  final Color _bgColor = const Color.fromARGB(255, 38, 2, 58);
-  final Color _cardColor = const Color(0xFF1B1B28);
-  final Color _primaryPurple = const Color(0xFF6E56FF);
+  final Color _primaryColor = const Color(0xFFB5E575);
+  
+  final Color _textColor = const Color(0xFF1E1E1E);
+  final Color _subtitleColor = const Color(0xFF8E8E8E);
+  final Color _bgColor = Colors.white;
 
   @override
   void initState() {
     super.initState();
-    // Pre-fill the text boxes with the existing data
     _titleController = TextEditingController(text: widget.itemData['title']);
     _priceController = TextEditingController(text: widget.itemData['price'].toString());
     _descController = TextEditingController(text: widget.itemData['description']);
@@ -49,7 +50,6 @@ class _EditListingScreenState extends State<EditListingScreen> {
     setState(() => _isLoading = true);
 
     try {
-      // Push the new values to the exact same Firestore document
       await FirebaseFirestore.instance.collection('listings').doc(widget.docId).update({
         'title': _titleController.text.trim(),
         'price': int.tryParse(_priceController.text.trim()) ?? 0,
@@ -60,7 +60,6 @@ class _EditListingScreenState extends State<EditListingScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Listing updated successfully!')),
         );
-        // Hand the new typed data BACK to the previous screen when popping
         Navigator.pop(context, {
           'title': _titleController.text.trim(),
           'price': int.tryParse(_priceController.text.trim()) ?? 0,
@@ -81,60 +80,95 @@ class _EditListingScreenState extends State<EditListingScreen> {
     return Scaffold(
       backgroundColor: _bgColor,
       appBar: AppBar(
-        backgroundColor: Colors.transparent,
+        backgroundColor: Colors.white,
         elevation: 0,
-        iconTheme: const IconThemeData(color: Colors.white),
-        title: const Text('Edit Listing', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+        surfaceTintColor: Colors.transparent,
+        iconTheme: IconThemeData(color: _textColor),
+        title: Text(
+          'Edit Listing', 
+          style: TextStyle(color: _textColor, fontSize: 18, fontWeight: FontWeight.bold)
+        ),
+        centerTitle: true,
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(1.0),
+          child: Container(color: Colors.grey.shade200, height: 1.0),
+        ),
       ),
       body: _isLoading
-          ? Center(child: CircularProgressIndicator(color: _primaryPurple))
-          : SingleChildScrollView(
-              padding: const EdgeInsets.all(20),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _buildTextField('Title', _titleController),
-                  const SizedBox(height: 16),
-                  _buildTextField('Price (EGP)', _priceController, isNumber: true),
-                  const SizedBox(height: 16),
-                  _buildTextField('Description', _descController, maxLines: 5),
-                  const SizedBox(height: 32),
-                  
-                  // Save Button
-                  SizedBox(
-                    width: double.infinity,
-                    height: 55,
-                    child: ElevatedButton(
-                      onPressed: _updateListing,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: _primaryPurple,
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          ? Center(child: CircularProgressIndicator(color: Colors.green[800]))
+          : SafeArea(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.all(24),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _buildTextField('Title', _titleController),
+                    const SizedBox(height: 20),
+                    
+                    _buildTextField('Price (EGP)', _priceController, isNumber: true),
+                    const SizedBox(height: 20),
+                    
+                    _buildTextField('Description', _descController, maxLines: 5),
+                    const SizedBox(height: 40),
+                    
+                    SizedBox(
+                      width: double.infinity,
+                      height: 56,
+                      child: ElevatedButton(
+                        onPressed: _updateListing,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: _primaryColor,
+                          elevation: 0,
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        ),
+                        child: Text(
+                          'Save Changes', 
+                          style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.green[900])
+                        ),
                       ),
-                      child: const Text('Save Changes', style: TextStyle(fontSize: 18, color: Colors.white)),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
     );
   }
 
-  // Helper widget for clean text fields
   Widget _buildTextField(String label, TextEditingController controller, {bool isNumber = false, int maxLines = 1}) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(label, style: const TextStyle(color: Colors.white70, fontSize: 14)),
-        const SizedBox(height: 8),
+        Padding(
+          padding: const EdgeInsets.only(bottom: 8.0, left: 4.0),
+          child: Text(
+            label,
+            style: TextStyle(
+              fontSize: 13, 
+              fontWeight: FontWeight.w700, 
+              color: Colors.grey.shade800,
+              letterSpacing: 0.3,
+            ),
+          ),
+        ),
         TextField(
           controller: controller,
           keyboardType: isNumber ? TextInputType.number : TextInputType.text,
           maxLines: maxLines,
-          style: const TextStyle(color: Colors.white),
+          style: TextStyle(color: _textColor),
           decoration: InputDecoration(
             filled: true,
-            fillColor: _cardColor,
-            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+            fillColor: Colors.white,
+            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
+            
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(color: Colors.grey.shade200, width: 1.5),
+            ),
+            
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(color: Colors.green.shade700, width: 2.0),
+            ),
           ),
         ),
       ],

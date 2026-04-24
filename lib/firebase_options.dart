@@ -41,48 +41,49 @@ class DefaultFirebaseOptions {
   }
 
   static const FirebaseOptions web = FirebaseOptions(
-    apiKey: 'AIzaSyC7e0rM7xoJHA1TrpOvrbLbgXsYJnYo0QA',
-    appId: '1:958358226757:web:25a968e15c997a15ec202c',
-    messagingSenderId: '958358226757',
-    projectId: 'yallasafqa-1bbae',
-    authDomain: 'yallasafqa-1bbae.firebaseapp.com',
-    storageBucket: 'yallasafqa-1bbae.firebasestorage.app',
-    measurementId: 'G-068T05T778',
+    apiKey: 'AIzaSyBG6tHdSFE7fcWG4f8YJDr7sr8E5ZWGS1E',
+    appId: '1:560785961911:web:1fa7dbfda7dcaf36bcae32',
+    messagingSenderId: '560785961911',
+    projectId: 'foundit-f312d',
+    authDomain: 'foundit-f312d.firebaseapp.com',
+    storageBucket: 'foundit-f312d.firebasestorage.app',
+    measurementId: 'G-DSXSP4BBMM',
   );
 
   static const FirebaseOptions android = FirebaseOptions(
-    apiKey: 'AIzaSyCJZvi3jDPdfR3SHjfW98YryKnOd6IJt7k',
-    appId: '1:958358226757:android:3cd68a1f86bee365ec202c',
-    messagingSenderId: '958358226757',
-    projectId: 'yallasafqa-1bbae',
-    storageBucket: 'yallasafqa-1bbae.firebasestorage.app',
+    apiKey: 'AIzaSyBsI0ft-M2AglmEqHdUI9vwMK3ncsXjhCk',
+    appId: '1:560785961911:android:6573558b8dd53584bcae32',
+    messagingSenderId: '560785961911',
+    projectId: 'foundit-f312d',
+    storageBucket: 'foundit-f312d.firebasestorage.app',
   );
 
   static const FirebaseOptions ios = FirebaseOptions(
-    apiKey: 'AIzaSyBqiqXlHnWy1N1r0Pr4Lz1Rs-9ccpEtPHg',
-    appId: '1:958358226757:ios:b6d4ed8d5a8c368fec202c',
-    messagingSenderId: '958358226757',
-    projectId: 'yallasafqa-1bbae',
-    storageBucket: 'yallasafqa-1bbae.firebasestorage.app',
+    apiKey: 'AIzaSyCmoNO7VaYni19gUqIrcUlKiacexOcnBTM',
+    appId: '1:560785961911:ios:8fbd97306512b238bcae32',
+    messagingSenderId: '560785961911',
+    projectId: 'foundit-f312d',
+    storageBucket: 'foundit-f312d.firebasestorage.app',
     iosBundleId: 'com.example.yallaSafqa',
   );
 
   static const FirebaseOptions macos = FirebaseOptions(
-    apiKey: 'AIzaSyBqiqXlHnWy1N1r0Pr4Lz1Rs-9ccpEtPHg',
-    appId: '1:958358226757:ios:b6d4ed8d5a8c368fec202c',
-    messagingSenderId: '958358226757',
-    projectId: 'yallasafqa-1bbae',
-    storageBucket: 'yallasafqa-1bbae.firebasestorage.app',
+    apiKey: 'AIzaSyCmoNO7VaYni19gUqIrcUlKiacexOcnBTM',
+    appId: '1:560785961911:ios:8fbd97306512b238bcae32',
+    messagingSenderId: '560785961911',
+    projectId: 'foundit-f312d',
+    storageBucket: 'foundit-f312d.firebasestorage.app',
     iosBundleId: 'com.example.yallaSafqa',
   );
 
   static const FirebaseOptions windows = FirebaseOptions(
-    apiKey: 'AIzaSyC7e0rM7xoJHA1TrpOvrbLbgXsYJnYo0QA',
-    appId: '1:958358226757:web:8c64bd3bbcfb3ec1ec202c',
-    messagingSenderId: '958358226757',
-    projectId: 'yallasafqa-1bbae',
-    authDomain: 'yallasafqa-1bbae.firebaseapp.com',
-    storageBucket: 'yallasafqa-1bbae.firebasestorage.app',
-    measurementId: 'G-FPNS74EVN3',
+    apiKey: 'AIzaSyBG6tHdSFE7fcWG4f8YJDr7sr8E5ZWGS1E',
+    appId: '1:560785961911:web:e07aeae983d581f7bcae32',
+    messagingSenderId: '560785961911',
+    projectId: 'foundit-f312d',
+    authDomain: 'foundit-f312d.firebaseapp.com',
+    storageBucket: 'foundit-f312d.firebasestorage.app',
+    measurementId: 'G-80JJQS2SMX',
   );
+
 }

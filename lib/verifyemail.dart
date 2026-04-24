@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:yalla_safqa/login.dart'; // Make sure this path is correct for your app
+import 'package:FoundIT/login.dart'; 
 
 class VerifyEmailScreen extends StatefulWidget {
   const VerifyEmailScreen({super.key});
@@ -15,22 +15,18 @@ class _VerifyEmailScreenState extends State<VerifyEmailScreen> {
   bool canResendEmail = true;
   Timer? timer;
 
-  // Your App Colors
-  final Color _bgColor = const Color.fromARGB(255, 38, 2, 58);
-  final Color _cardColor = const Color(0xFF1B1B28);
-  final Color _primaryPurple = const Color(0xFF6E56FF);
-  final Color _successGreen = const Color(0xFF00D289);
-  final Color _textSecondary = const Color(0xFF8E8E9F);
+  final Color _primaryColor = const Color(0xFFB5E575); 
+  final Color _textColor = const Color(0xFF1E1E1E);
+  final Color _subtitleColor = const Color(0xFF8E8E8E);
+  final Color _inputFillColor = const Color(0xFFF5F5F5);
 
   @override
   void initState() {
     super.initState();
 
-
     isEmailVerified = FirebaseAuth.instance.currentUser?.emailVerified ?? false;
 
     if (!isEmailVerified) {
-      // If not verified, start a timer to check every 3 seconds
       timer = Timer.periodic(
         const Duration(seconds: 3),
         (_) => checkEmailVerified(),
@@ -40,12 +36,11 @@ class _VerifyEmailScreenState extends State<VerifyEmailScreen> {
 
   @override
   void dispose() {
-    timer?.cancel(); // ALWAYS cancel timers to prevent memory leaks!
+    timer?.cancel(); 
     super.dispose();
   }
 
   Future<void> checkEmailVerified() async {
-    // Call reload() to force Firebase to fetch the latest user data
     await FirebaseAuth.instance.currentUser?.reload();
 
     setState(() {
@@ -55,10 +50,8 @@ class _VerifyEmailScreenState extends State<VerifyEmailScreen> {
     if (isEmailVerified) {
       timer?.cancel();
       
-      // Wait 2 seconds so the user can see the "Success" animation
       await Future.delayed(const Duration(seconds: 2));
       
-      // Sign them out so they start completely fresh on the Login screen
       await FirebaseAuth.instance.signOut();
 
       if (mounted) {
@@ -75,7 +68,6 @@ class _VerifyEmailScreenState extends State<VerifyEmailScreen> {
       final user = FirebaseAuth.instance.currentUser;
       await user?.sendEmailVerification();
 
-      // Prevent spamming the resend button
       setState(() => canResendEmail = false);
       await Future.delayed(const Duration(seconds: 10));
       if (mounted) setState(() => canResendEmail = true);
@@ -91,121 +83,121 @@ class _VerifyEmailScreenState extends State<VerifyEmailScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: _bgColor,
+      backgroundColor: Colors.white,
       body: SafeArea(
         child: Center(
-          child: Padding(
+          child: SingleChildScrollView(
             padding: const EdgeInsets.symmetric(horizontal: 24.0),
-            child: Container(
-              padding: const EdgeInsets.all(32.0),
-              decoration: BoxDecoration(
-                color: _cardColor,
-                borderRadius: BorderRadius.circular(32),
-                border: Border.all(color: Colors.white.withOpacity(0.05)),
-                boxShadow: [
-                  BoxShadow(
-                    color: (isEmailVerified ? _successGreen : _primaryPurple).withOpacity(0.05),
-                    blurRadius: 40,
-                    spreadRadius: 2,
-                  ),
-                ],
-              ),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  // Dynamic Icon (Mail -> Checkmark)
-                  AnimatedContainer(
-                    duration: const Duration(milliseconds: 500),
-                    padding: const EdgeInsets.all(20),
-                    decoration: BoxDecoration(
-                      color: isEmailVerified ? _successGreen : _primaryPurple,
-                      shape: BoxShape.circle,
-                      boxShadow: [
-                        BoxShadow(
-                          color: (isEmailVerified ? _successGreen : _primaryPurple).withOpacity(0.4),
-                          blurRadius: 20,
-                          spreadRadius: 2,
-                        ),
-                      ],
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.storefront_outlined, color: Colors.green[800], size: 28),
+                    const SizedBox(width: 8),
+                    Text(
+                      'FoundIt',
+                      style: TextStyle(
+                        fontSize: 22,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.green[900],
+                      ),
                     ),
-                    child: Icon(
-                      isEmailVerified ? Icons.check_rounded : Icons.mark_email_unread_outlined,
-                      color: Colors.white,
-                      size: 40,
-                    ),
-                  ),
-                  const SizedBox(height: 24),
+                  ],
+                ),
+                const SizedBox(height: 60),
 
-                  // Dynamic Title
-                  Text(
-                    isEmailVerified ? 'Verified!' : 'Check your mail',
-                    style: const TextStyle(
-                      fontSize: 26,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                      fontFamily: "syne",
-                    ),
+                AnimatedContainer(
+                  duration: const Duration(milliseconds: 500),
+                  padding: const EdgeInsets.all(24),
+                  decoration: BoxDecoration(
+                    color: isEmailVerified ? Colors.green[600] : _inputFillColor,
+                    shape: BoxShape.circle,
                   ),
-                  const SizedBox(height: 12),
-
-                  // Dynamic Subtitle
-                  Text(
-                    isEmailVerified
-                        ? 'Routing you to login...'
-                        : 'We just sent a verification link to your university email. Click the link to activate your Yallasafqa account.',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: _textSecondary,
-                      height: 1.5,
-                    ),
+                  child: Icon(
+                    isEmailVerified ? Icons.check_rounded : Icons.mark_email_unread_outlined,
+                    color: isEmailVerified ? Colors.white : Colors.green[800],
+                    size: 48,
                   ),
-                  const SizedBox(height: 32),
+                ),
+                const SizedBox(height: 32),
 
-                  // Only show these buttons if NOT verified yet
-                  if (!isEmailVerified) ...[
-                    const CircularProgressIndicator(
-                      color: Color(0xFF6E56FF),
-                    ),
-                    const SizedBox(height: 32),
-                    
-                    // Resend Button
-                    ElevatedButton(
+                Text(
+                  isEmailVerified ? 'Verified!' : 'Check your mail',
+                  style: TextStyle(
+                    fontSize: 26,
+                    fontWeight: FontWeight.bold,
+                    color: _textColor,
+                  ),
+                ),
+                const SizedBox(height: 12),
+
+                Text(
+                  isEmailVerified
+                      ? 'Routing you to login...'
+                      : 'We just sent a verification link to your email. Click the link to activate your FoundIt account.',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 15,
+                    color: _subtitleColor,
+                    height: 1.5,
+                  ),
+                ),
+                const SizedBox(height: 40),
+
+                if (!isEmailVerified) ...[
+                  const CircularProgressIndicator(
+                    color: Color(0xFFB5E575), 
+                  ),
+                  const SizedBox(height: 40),
+                  
+                  SizedBox(
+                    width: double.infinity,
+                    height: 56,
+                    child: ElevatedButton(
                       onPressed: canResendEmail ? sendVerificationEmail : null,
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.transparent,
-                        shadowColor: Colors.transparent,
+                        backgroundColor: _primaryColor,
+                        elevation: 0,
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(25),
-                          side: BorderSide(color: _primaryPurple.withOpacity(0.5)),
+                          borderRadius: BorderRadius.circular(12),
                         ),
-                        minimumSize: const Size(double.infinity, 50),
                       ),
                       child: Text(
                         canResendEmail ? 'Resend Email' : 'Wait 10s to resend...',
-                        style: TextStyle(color: canResendEmail ? Colors.white : _textSecondary),
+                        style: TextStyle(
+                          color: canResendEmail ? Colors.green[900] : Colors.green[900]?.withOpacity(0.5),
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                     ),
-                    const SizedBox(height: 16),
+                  ),
+                  const SizedBox(height: 16),
 
-                    // Cancel Button
-                    TextButton(
-                      onPressed: () async {
-                        // If they cancel, sign them out and send to login
-                        timer?.cancel();
-                        await FirebaseAuth.instance.signOut();
-                        if (mounted) {
-                          Navigator.pushReplacement(
-                            context,
-                            MaterialPageRoute(builder: (context) => const LoginScreen()),
-                          );
-                        }
-                      },
-                      child: Text('Cancel', style: TextStyle(color: _textSecondary)),
+                  TextButton(
+                    onPressed: () async {
+                      timer?.cancel();
+                      await FirebaseAuth.instance.signOut();
+                      if (mounted) {
+                        Navigator.pushReplacement(
+                          context,
+                          MaterialPageRoute(builder: (context) => const LoginScreen()),
+                        );
+                      }
+                    },
+                    child: Text(
+                      'Cancel and return to login',
+                      style: TextStyle(
+                        color: _subtitleColor,
+                        fontSize: 14,
+                        fontWeight: FontWeight.w500,
+                      ),
                     ),
-                  ]
-                ],
-              ),
+                  ),
+                ]
+              ],
             ),
           ),
         ),

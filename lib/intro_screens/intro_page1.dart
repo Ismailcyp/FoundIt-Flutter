@@ -10,7 +10,7 @@ class IntroPage1 extends StatelessWidget {
     return Container(
         width: double.infinity,
         height: double.infinity,
-        color: const Color.fromARGB(255, 38, 2, 58),
+        color: const Color.fromARGB(255, 1, 37, 48),
         // decoration: const BoxDecoration(
         //   gradient: LinearGradient(
         //     begin: Alignment.topCenter,
@@ -28,7 +28,7 @@ class IntroPage1 extends StatelessWidget {
           Container(
              padding: EdgeInsets.only(left: 35),
             child: const Text(
-              "Explore items listed by verified students",
+              "Explore items listed",
               style: TextStyle(
                 color: Colors.white, 
                 fontSize:19, 

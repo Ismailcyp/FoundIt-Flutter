@@ -14,18 +14,18 @@ class ProfileScreen extends StatefulWidget {
 class _ProfileScreenState extends State<ProfileScreen> {
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _phoneController = TextEditingController();
-  final TextEditingController _emailController = TextEditingController(); // NEW: Email Controller
+  final TextEditingController _emailController = TextEditingController();
   
   bool _isLoading = true;
   bool _isSaving = false;
   
-  // NEW: Image variables
   String? _base64Image;
   final ImagePicker _picker = ImagePicker();
 
-  final Color _bgColor = const Color.fromARGB(255, 38, 2, 58);
-  final Color _cardColor = const Color(0xFF1B1B28);
-  final Color _primaryPurple = const Color(0xFF6E56FF);
+  final Color _primaryColor = const Color(0xFFB5E575);
+  final Color _textColor = const Color(0xFF1E1E1E);
+  final Color _subtitleColor = const Color(0xFF8E8E8E);
+  final Color _bgColor = Colors.white;
 
   @override
   void initState() {
@@ -48,7 +48,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
         _phoneController.text = data['phone'] ?? '';
         _emailController.text = data['email'] ?? FirebaseAuth.instance.currentUser?.email ?? '';
         
-        // Load existing profile image if they have one
         if (data.containsKey('profileImage')) {
           _base64Image = data['profileImage'];
         }
@@ -56,16 +55,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
     } catch (e) {
       debugPrint("Error loading profile: $e");
     } finally {
-      setState(() => _isLoading = false);
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 
-  // --- NEW: PICK IMAGE FUNCTION ---
-  Future<void> _pickImage() async {
+  Future<void> _pickImage(ImageSource source) async {
     try {
       final XFile? image = await _picker.pickImage(
-        source: ImageSource.gallery,
-        imageQuality: 50, // Compresses the image to save database space
+        source: source,
+        imageQuality: 40, 
       );
       
       if (image != null) {
@@ -85,6 +83,52 @@ class _ProfileScreenState extends State<ProfileScreen> {
     }
   }
 
+  void _showImagePickerOptions() {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 12),
+          child: Wrap(
+            children: [
+              Center(
+                child: Container(
+                  width: 40,
+                  height: 4,
+                  margin: const EdgeInsets.only(bottom: 12),
+                  decoration: BoxDecoration(
+                    color: Colors.grey.shade300,
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+              ),
+              ListTile(
+                leading: Icon(Icons.photo_library_outlined, color: _textColor),
+                title: Text('Choose from Gallery', style: TextStyle(color: _textColor, fontWeight: FontWeight.w500)),
+                onTap: () {
+                  Navigator.pop(context);
+                  _pickImage(ImageSource.gallery);
+                },
+              ),
+              ListTile(
+                leading: Icon(Icons.camera_alt_outlined, color: _textColor),
+                title: Text('Take a Photo', style: TextStyle(color: _textColor, fontWeight: FontWeight.w500)),
+                onTap: () {
+                  Navigator.pop(context);
+                  _pickImage(ImageSource.camera);
+                },
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   Future<void> _saveUserData() async {
     if (_nameController.text.trim().isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -102,13 +146,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
       String fName = nameParts.isNotEmpty ? nameParts[0] : '';
       String lName = nameParts.length > 1 ? nameParts.sublist(1).join(' ') : '';
 
-      // Create the update map
       Map<String, dynamic> updateData = {
         'firstName': fName,
         'lastName': lName,
       };
 
-      // Only add the image to the update if they actually picked one
       if (_base64Image != null) {
         updateData['profileImage'] = _base64Image;
       }
@@ -138,7 +180,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
     super.dispose();
   }
 
-  // Safe image decoder (same as your store feed)
   MemoryImage? _getDecodedImage() {
     if (_base64Image == null || _base64Image!.isEmpty) return null;
     try {
@@ -157,69 +198,97 @@ class _ProfileScreenState extends State<ProfileScreen> {
     return Scaffold(
       backgroundColor: _bgColor,
       appBar: AppBar(
-        backgroundColor: Colors.transparent,
+        backgroundColor: Colors.white,
         elevation: 0,
-        iconTheme: const IconThemeData(color: Colors.white),
-        title: const Text('Edit Profile', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+        surfaceTintColor: Colors.transparent,
+        iconTheme: IconThemeData(color: _textColor),
+        title: Text('Edit Profile', style: TextStyle(color: _textColor, fontWeight: FontWeight.bold, fontSize: 18)),
+        centerTitle: true,
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(1.0),
+          child: Container(color: Colors.grey.shade100, height: 1.0),
+        ),
       ),
       body: _isLoading
-          ? Center(child: CircularProgressIndicator(color: _primaryPurple))
+          ? Center(child: CircularProgressIndicator(color: Colors.green[800]))
           : SingleChildScrollView(
-              padding: const EdgeInsets.all(24),
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
               child: Column(
                 children: [
-                  // --- NEW: CLICKABLE AVATAR ---
                   GestureDetector(
-                    onTap: _pickImage,
+                    onTap: _showImagePickerOptions,
                     child: Stack(
                       alignment: Alignment.bottomRight,
                       children: [
-                        CircleAvatar(
-                          radius: 50,
-                          backgroundColor: _primaryPurple.withOpacity(0.2),
-                          backgroundImage: _getDecodedImage(),
-                          child: _base64Image == null
-                              ? Icon(Icons.person, size: 50, color: _primaryPurple)
-                              : null,
-                        ),
-                        // Little camera badge
                         Container(
-                          padding: const EdgeInsets.all(6),
-                          decoration: const BoxDecoration(
-                            color: Color(0xFF6E56FF),
+                          padding: const EdgeInsets.all(4),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
                             shape: BoxShape.circle,
+                            boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10)],
                           ),
-                          child: const Icon(Icons.camera_alt, color: Colors.white, size: 16),
+                          child: CircleAvatar(
+                            radius: 54,
+                            backgroundColor: Colors.grey.shade100,
+                            backgroundImage: _getDecodedImage(),
+                            child: _base64Image == null
+                                ? Icon(Icons.person_outline, size: 50, color: Colors.grey.shade400)
+                                : null,
+                          ),
+                        ),
+                        Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: Colors.green[800],
+                            shape: BoxShape.circle,
+                            border: Border.all(color: Colors.white, width: 2),
+                          ),
+                          child: const Icon(Icons.camera_alt, color: Colors.white, size: 18),
                         ),
                       ],
                     ),
                   ),
-                  const SizedBox(height: 32),
-
-                  // Name is editable
-                  _buildTextField('Full Name', _nameController, Icons.person_outline),
-                  const SizedBox(height: 16),
-                  
-                  // NEW: Email is locked and read-only
-                  _buildTextField('Email Address', _emailController, Icons.mail_outline, isReadOnly: true),
-                  const SizedBox(height: 16),
-
-                  // Phone is locked and read-only
-                  _buildTextField('WhatsApp Number', _phoneController, Icons.phone_outlined, isNumber: true, isReadOnly: true),
                   const SizedBox(height: 40),
+
+                  _buildLabel('Full Name'),
+                  _buildTextField(
+                    controller: _nameController,
+                    icon: Icons.person_outline,
+                    hint: 'Your name',
+                  ),
+                  const SizedBox(height: 24),
+                  
+                  _buildLabel('Email Address'),
+                  _buildTextField(
+                    controller: _emailController,
+                    icon: Icons.mail_outline,
+                    hint: 'Email',
+                    isReadOnly: true,
+                  ),
+                  const SizedBox(height: 24),
+
+                  _buildLabel('WhatsApp Number'),
+                  _buildTextField(
+                    controller: _phoneController,
+                    icon: Icons.phone_outlined,
+                    hint: 'Phone',
+                    isReadOnly: true,
+                  ),
+                  const SizedBox(height: 48),
 
                   SizedBox(
                     width: double.infinity,
-                    height: 55,
+                    height: 56,
                     child: ElevatedButton(
                       onPressed: _isSaving ? null : _saveUserData,
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: _primaryPurple,
+                        backgroundColor: _primaryColor,
+                        elevation: 0,
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                       ),
                       child: _isSaving
-                          ? const SizedBox(height: 24, width: 24, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
-                          : const Text('Save Changes', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)),
+                          ? const SizedBox(height: 24, width: 24, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2.5))
+                          : Text('Save Changes', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.green[900])),
                     ),
                   ),
                 ],
@@ -228,26 +297,54 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  Widget _buildTextField(String label, TextEditingController controller, IconData icon, {bool isNumber = false, bool isReadOnly = false}) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(label, style: const TextStyle(color: Colors.white70, fontSize: 14)),
-        const SizedBox(height: 8),
-        TextField(
-          controller: controller,
-          readOnly: isReadOnly, 
-          keyboardType: isNumber ? TextInputType.phone : TextInputType.name,
-          style: TextStyle(color: isReadOnly ? Colors.white54 : Colors.white),
-          decoration: InputDecoration(
-            prefixIcon: Icon(icon, color: Colors.white54),
-            suffixIcon: isReadOnly ? const Icon(Icons.verified, color: Colors.green, size: 20) : null,
-            filled: true,
-            fillColor: _cardColor,
-            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+  Widget _buildLabel(String text) {
+    return Align(
+      alignment: Alignment.centerLeft,
+      child: Padding(
+        padding: const EdgeInsets.only(bottom: 8.0, left: 4.0),
+        child: Text(
+          text,
+          style: TextStyle(
+            fontSize: 13, 
+            fontWeight: FontWeight.w700, 
+            color: Colors.grey.shade800,
+            letterSpacing: 0.3,
           ),
         ),
-      ],
+      ),
+    );
+  }
+
+  Widget _buildTextField({
+    required TextEditingController controller,
+    required IconData icon,
+    required String hint,
+    bool isReadOnly = false,
+  }) {
+    return TextField(
+      controller: controller,
+      readOnly: isReadOnly,
+      style: TextStyle(color: isReadOnly ? Colors.grey.shade500 : _textColor, fontWeight: FontWeight.w500),
+      decoration: InputDecoration(
+        prefixIcon: Icon(icon, color: isReadOnly ? Colors.grey.shade300 : Colors.grey.shade400, size: 22),
+        suffixIcon: isReadOnly 
+            ? Container(
+                margin: const EdgeInsets.only(right: 12),
+                child: Icon(Icons.verified_user, color: Colors.green.shade600, size: 18),
+              ) 
+            : null,
+        filled: true,
+        fillColor: isReadOnly ? Colors.grey.shade50 : Colors.white,
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(color: Colors.grey.shade200, width: 1.5),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(color: Colors.green.shade700, width: 2.0),
+        ),
+      ),
     );
   }
 }

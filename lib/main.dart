@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:yalla_safqa/firebase_options.dart';
-import 'package:yalla_safqa/splashscreen.dart'; 
-import 'package:yalla_safqa/login.dart';
-import 'package:yalla_safqa/signin.dart'; 
-import 'package:yalla_safqa/store.dart';
+import 'package:FoundIT/firebase_options.dart';
+import 'package:FoundIT/splashscreen.dart'; 
+import 'package:FoundIT/login.dart';
+import 'package:FoundIT/signin.dart'; 
+import 'package:FoundIT/store.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
@@ -33,20 +33,17 @@ class Myapp extends StatelessWidget {
 
           if (snapshot.hasData) {
             if (snapshot.data!.emailVerified) {
-              return const Mymain(); // Route directly to the Store!
+              return const Mymain(); 
             } else {
-              // If they aren't verified, log them out and force them to the login page
               FirebaseAuth.instance.signOut();
               return const LoginScreen();
             }
           }
 
-          // 3. If there is no user logged in, start the normal flow
           return const SplashScreen(); 
         },
       ),
       
-      // Keep your named routes for easy navigation elsewhere in the app
       routes: {
         '/splash': (context) => const SplashScreen(),
         '/login': (context) => const LoginScreen(),

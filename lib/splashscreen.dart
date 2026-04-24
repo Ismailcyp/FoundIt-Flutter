@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:yalla_safqa/instr.dart'; // Import your new file
+import 'package:FoundIT/instr.dart'; 
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});

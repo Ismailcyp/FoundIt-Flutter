@@ -5,13 +5,12 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:yalla_safqa/login.dart';
-import 'package:yalla_safqa/addproduct.dart';
-import 'package:yalla_safqa/item_details.dart';
-import 'package:yalla_safqa/my_listings.dart';
-import 'package:yalla_safqa/profile.dart';
-import 'package:yalla_safqa/contact_us.dart';
-import 'dart:ui';
+import 'package:FoundIT/login.dart';
+import 'package:FoundIT/addproduct.dart';
+import 'package:FoundIT/item_details.dart';
+import 'package:FoundIT/my_listings.dart';
+import 'package:FoundIT/profile.dart';
+import 'package:FoundIT/contact_us.dart';
 
 class Mymain extends StatefulWidget {
   const Mymain({super.key});
@@ -27,7 +26,6 @@ class _MymainState extends State<Mymain> {
   String _selectedCategory = 'All';
   final TextEditingController _searchController = TextEditingController();
 
-  // --- UPDATED STATE ---
   List<String> _savedItems = [];
   String _firstName = 'User';
   String _lastName = '';
@@ -35,17 +33,17 @@ class _MymainState extends State<Mymain> {
 
   StreamSubscription<DocumentSnapshot>? _userSubscription;
 
-  final Color _bgColor = const Color.fromARGB(255, 38, 2, 58);
-  final Color _cardColor = const Color(0xFF1B1B28);
-  final Color _primaryPurple = const Color(0xFF6E56FF);
-  final Color _textSecondary = const Color(0xFF8E8E9F);
+  final Color _primaryColor = const Color(0xFFB5E575); 
+  final Color _textColor = const Color(0xFF1E1E1E);
+  final Color _subtitleColor = const Color(0xFF8E8E8E);
+  final Color _inputFillColor = const Color(0xFFF5F5F5);
+  final Color _bgColor = const Color(0xFFF9F9F9); 
 
   @override
   void initState() {
     super.initState();
     final String uid = FirebaseAuth.instance.currentUser!.uid;
 
-    // Listen to the ENTIRE user document to keep the Drawer updated in real-time
     _userSubscription = FirebaseFirestore.instance
         .collection('Users')
         .doc(uid)
@@ -96,7 +94,6 @@ class _MymainState extends State<Mymain> {
     return query.snapshots();
   }
 
-  // Safe image decoder for the Drawer Avatar
   MemoryImage? _getDecodedProfileImage() {
     if (_base64ProfileImage == null || _base64ProfileImage!.isEmpty) {
       return null;
@@ -116,227 +113,184 @@ class _MymainState extends State<Mymain> {
   Widget build(BuildContext context) {
     return Scaffold(
       key: _scaffoldKey,
-      backgroundColor: const Color(0xFF2A0845),
-    extendBody: true,
+      backgroundColor: _bgColor,
+      extendBody: true,
+      
       endDrawer: Drawer(
-        backgroundColor: _cardColor,
-        width: MediaQuery.of(context).size.width * 0.60,
+        backgroundColor: Colors.white,
+        width: MediaQuery.of(context).size.width * 0.65,
         child: SafeArea(
           child: Column(
             children: [
               const SizedBox(height: 30),
-    
               CircleAvatar(
                 radius: 40,
-                backgroundColor: _primaryPurple.withOpacity(0.2),
+                backgroundColor: _inputFillColor,
                 backgroundImage: _getDecodedProfileImage(),
                 child: _base64ProfileImage == null
-                    ? Icon(Icons.person, size: 40, color: _primaryPurple)
+                    ? Icon(Icons.person_outline, size: 40, color: Colors.green[800])
                     : null,
               ),
-              const SizedBox(height: 12),
-    
-              // 2. Full Name
+              const SizedBox(height: 16),
               Text(
                 '$_firstName $_lastName'.trim(),
                 textAlign: TextAlign.center,
-                style: const TextStyle(
-                  color: Colors.white,
+                style: TextStyle(
+                  color: _textColor,
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
                 ),
               ),
-              const SizedBox(height: 20),
-              const Divider(color: Colors.white24),
-    
-              // 3. Menu Items
+              const SizedBox(height: 24),
+              Divider(color: Colors.grey[200], thickness: 1),
+
               ListTile(
-                leading: const Icon(
-                  Icons.person_outline,
-                  color: Colors.white,
-                ),
-                title: const Text(
-                  'Profile',
-                  style: TextStyle(color: Colors.white, fontSize: 16),
-                ),
+                leading: Icon(Icons.person_outline, color: _textColor),
+                title: Text('Profile', style: TextStyle(color: _textColor, fontSize: 16, fontWeight: FontWeight.w500)),
                 onTap: () {
                   Navigator.pop(context);
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => const ProfileScreen(),
-                    ),
-                  );
+                  Navigator.push(context, MaterialPageRoute(builder: (context) => const ProfileScreen()));
                 },
               ),
               ListTile(
-                leading: const Icon(
-                  Icons.mail_outline,
-                  color: Colors.white,
-                ),
-                title: const Text(
-                  'Contact Us',
-                  style: TextStyle(color: Colors.white, fontSize: 16),
-                ),
+                leading: Icon(Icons.mail_outline, color: _textColor),
+                title: Text('Contact Us', style: TextStyle(color: _textColor, fontSize: 16, fontWeight: FontWeight.w500)),
                 onTap: () {
                   Navigator.pop(context);
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => const ContactUsScreen(),
-                    ),
-                  );
+                  Navigator.push(context, MaterialPageRoute(builder: (context) => const ContactUsScreen()));
                 },
               ),
               ListTile(
                 leading: const Icon(Icons.logout, color: Colors.redAccent),
-                title: const Text(
-                  'Logout',
-                  style: TextStyle(
-                    color: Colors.redAccent,
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
+                title: const Text('Logout', style: TextStyle(color: Colors.redAccent, fontSize: 16, fontWeight: FontWeight.bold)),
                 onTap: _handleLogout,
               ),
-    
+
               const Spacer(),
-    
-              const Divider(color: Colors.white24),
-              const Padding(
-                padding: EdgeInsets.symmetric(vertical: 20),
-                child: Text(
-                  'Made with @YallaSafqaTeam',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    color: Colors.white54,
-                    fontSize: 12,
-                    fontStyle: FontStyle.italic,
-                  ),
+              Divider(color: Colors.grey[200], thickness: 1),
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 24),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.storefront_outlined, color: Colors.green[800], size: 18),
+                    const SizedBox(width: 6),
+                    Text(
+                      'FoundIt Built by ISMAIL 😍',
+                      style: TextStyle(color: _subtitleColor, fontSize: 12, fontWeight: FontWeight.bold),
+                    ),
+                  ],
                 ),
               ),
             ],
           ),
         ),
       ),
-    
-      body: Stack(children: [IndexedStack(
-        index: _currentTab,
+
+
+      body: Stack(
         children: [
-          SafeArea(child: _buildHomeTab()),
-          const MyListingsScreen(),
-          SafeArea(child: _buildFavoritesTab()),
-        ],
-      ),],),
-    
-      floatingActionButton: Container(
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          gradient: LinearGradient(
-            colors: [
-              _primaryPurple,
-              const Color.fromARGB(255, 161, 2, 179),
+          IndexedStack(
+            index: _currentTab,
+            children: [
+              SafeArea(child: _buildHomeTab()),
+              const MyListingsScreen(),
+              SafeArea(child: _buildFavoritesTab()),
             ],
           ),
+        ],
+      ),
+
+     bottomNavigationBar: Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
           boxShadow: [
             BoxShadow(
-              color: _primaryPurple.withOpacity(0.4),
+              color: Colors.black.withOpacity(0.04), 
               blurRadius: 20,
-              offset: const Offset(0, 4),
+              offset: const Offset(0, -5),
             ),
           ],
         ),
-        child: FloatingActionButton(
-          onPressed: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                fullscreenDialog: true,
-                builder: (context) => const AddListingScreen(),
-              ),
-            );
-          },
-          backgroundColor: Colors.transparent,
-          elevation: 0,
-          child: const Icon(Icons.add, color: Colors.white, size: 28),
-        ),
-      ),
-      floatingActionButtonLocation:
-          FloatingActionButtonLocation.centerDocked,
-    
-      bottomNavigationBar: BottomAppBar(
-        color: _cardColor,
-        shape: const CircularNotchedRectangle(),
-        notchMargin: 9,
-        child: SizedBox(
-          height: 60,
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: [
-              _buildNavItem(Icons.home_filled, 'Home', 0),
-              _buildNavItem(Icons.sell_outlined, 'My Listings', 1),
-              const SizedBox(width: 48),
-              _buildNavItem(CupertinoIcons.heart, 'Favorite', 2),
-              _buildNavItem(Icons.settings_outlined, 'Settings', 3),
-            ],
+        child: SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 8.0),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
+              children: [
+                _buildNavItem(Icons.home_filled, 'Home', 0),
+                _buildNavItem(Icons.sell_outlined, 'Listings', 1),
+                _buildAddButton(),
+                _buildNavItem(CupertinoIcons.heart, 'Saved', 2),
+                _buildNavItem(Icons.settings_outlined, 'Settings', 3),
+              ],
+            ),
           ),
         ),
       ),
     );
+    
   }
 
-  // =========================================================================
-  // TAB CONTENT BUILDERS
-  // =========================================================================
-
-Widget _buildHomeTab() {
+  Widget _buildHomeTab() {
     return Column(
       children: [
         Padding(
-          padding: const EdgeInsets.all(9.0),
+          padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 12.0),
           child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text(
-                'Yallasafqa',
-                style: TextStyle(
-                  fontSize: 28,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
-                  fontFamily: "dmsans",
+              Padding(
+                padding: const EdgeInsets.only(left: 125),
+                child: Row(
+                  children: [
+                    Icon(Icons.storefront_outlined, color: Colors.green[800], size: 28),
+                    const SizedBox(width: 8),
+                    Text(
+                      'FoundIt',
+                      style: TextStyle(
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.green[900],
+                      ),
+                    ),
+                  ],
                 ),
               ),
+              const SizedBox(height: 16),
               TextField(
                 controller: _searchController,
-                style: const TextStyle(color: Colors.white),
-                // 1. ADDED THIS: Rebuild the screen when the user types
-                onChanged: (value) {
-                  setState(() {}); 
-                },
+                style: TextStyle(color: _textColor),
+                onChanged: (value) => setState(() {}),
                 decoration: InputDecoration(
-                  hintText: 'Search',
-                  hintStyle: TextStyle(color: _textSecondary),
-                  prefixIcon: Icon(Icons.search, color: _textSecondary),
+                  hintText: 'Search for anything...',
+                  hintStyle: TextStyle(color: _subtitleColor, fontSize: 14),
+                  prefixIcon: Icon(Icons.search, color: _subtitleColor),
                   filled: true,
-                  fillColor: _cardColor,
+                  fillColor: Colors.white,
                   contentPadding: const EdgeInsets.symmetric(vertical: 0),
                   border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(24),
-                    borderSide: BorderSide.none,
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide(color: Colors.grey.shade200),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide(color: Colors.grey.shade200),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide(color: _primaryColor),
                   ),
                 ),
               ),
             ],
           ),
         ),
-        // 2. DYNAMIC Horizontal Category Scroll
+
         SizedBox(
-          height: 40,
+          height: 36,
           child: StreamBuilder<QuerySnapshot>(
-            stream: FirebaseFirestore.instance
-                .collection('categories')
-                .orderBy('createdAt')
-                .snapshots(),
+            stream: FirebaseFirestore.instance.collection('categories').orderBy('createdAt').snapshots(),
             builder: (context, snapshot) {
               List<String> dynamicCategories = ['All'];
 
@@ -351,50 +305,34 @@ Widget _buildHomeTab() {
 
               return ListView.builder(
                 scrollDirection: Axis.horizontal,
-                padding: const EdgeInsets.symmetric(horizontal: 12.0),
+                padding: const EdgeInsets.symmetric(horizontal: 16.0),
                 itemCount: dynamicCategories.length,
                 itemBuilder: (context, index) {
                   final category = dynamicCategories[index];
                   final isSelected = category == _selectedCategory;
 
                   return GestureDetector(
-                    onTap: () {
-                      setState(() {
-                        _selectedCategory = category;
-                      });
-                    },
-                    child: Container(
-                      margin: const EdgeInsets.symmetric(horizontal: 4.0),
+                    onTap: () => setState(() => _selectedCategory = category),
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 200),
+                      margin: const EdgeInsets.only(right: 8.0),
                       padding: const EdgeInsets.symmetric(horizontal: 16.0),
                       decoration: BoxDecoration(
-                        color: isSelected ? _primaryPurple : Colors.transparent,
+                        color: isSelected ? Colors.green[800] : Colors.white,
                         borderRadius: BorderRadius.circular(20),
                         border: Border.all(
-                          color: isSelected ? _primaryPurple : _cardColor,
+                          color: isSelected ? Colors.green.shade800 : Colors.grey.shade300,
                         ),
                       ),
-                      child: Row(
-                        children: [
-                          if (isSelected) ...[
-                            const Icon(
-                              Icons.check,
-                              color: Colors.white,
-                              size: 16,
-                            ),
-                            const SizedBox(width: 4),
-                          ],
-                          Text(
-                            category,
-                            style: TextStyle(
-                              color: isSelected
-                                  ? const Color.fromARGB(255, 255, 255, 255)
-                                  : _textSecondary,
-                              fontWeight: isSelected
-                                  ? FontWeight.bold
-                                  : FontWeight.normal,
-                            ),
+                      child: Center(
+                        child: Text(
+                          category,
+                          style: TextStyle(
+                            color: isSelected ? Colors.white : _textColor,
+                            fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+                            fontSize: 13,
                           ),
-                        ],
+                        ),
                       ),
                     ),
                   );
@@ -404,29 +342,21 @@ Widget _buildHomeTab() {
           ),
         ),
         const SizedBox(height: 16),
+
         Expanded(
           child: StreamBuilder<QuerySnapshot>(
             stream: _getListingsStream(),
             builder: (context, snapshot) {
               if (snapshot.connectionState == ConnectionState.waiting) {
-                return Center(
-                  child: CircularProgressIndicator(color: _primaryPurple),
-                );
+                return Center(child: CircularProgressIndicator(color: _primaryColor));
               }
               if (snapshot.hasError) {
-                return const Center(
-                  child: Text(
-                    'Error loading listings',
-                    style: TextStyle(color: Colors.white),
-                  ),
-                );
+                return Center(child: Text('Error loading listings', style: TextStyle(color: _textColor)));
               }
 
-              // Grab the documents from Firestore
               var docs = snapshot.data?.docs ?? [];
-
-              // 2. ADDED THIS: Filter the list based on the search box text
               final String searchQuery = _searchController.text.trim().toLowerCase();
+              
               if (searchQuery.isNotEmpty) {
                 docs = docs.where((doc) {
                   final itemData = doc.data() as Map<String, dynamic>;
@@ -438,21 +368,19 @@ Widget _buildHomeTab() {
               if (docs.isEmpty) {
                 return Center(
                   child: Text(
-                    searchQuery.isNotEmpty 
-                        ? 'No items found for "$searchQuery"'
-                        : 'No items found in $_selectedCategory.',
-                    style: TextStyle(color: _textSecondary, fontSize: 16),
+                    searchQuery.isNotEmpty ? 'No items found for "$searchQuery"' : 'No items found in $_selectedCategory.',
+                    style: TextStyle(color: _subtitleColor, fontSize: 16),
                   ),
                 );
               }
 
               return GridView.builder(
-                padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                padding: const EdgeInsets.only(left: 20.0, right: 20.0, bottom: 100.0), 
                 gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                   crossAxisCount: 2,
-                  crossAxisSpacing: 12,
+                  crossAxisSpacing: 16,
                   mainAxisSpacing: 16,
-                  childAspectRatio: 0.75,
+                  childAspectRatio: 0.68, 
                 ),
                 itemCount: docs.length,
                 itemBuilder: (context, index) {
@@ -470,14 +398,15 @@ Widget _buildHomeTab() {
 
   Widget _buildFavoritesTab() {
     return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Padding(
-          padding: EdgeInsets.symmetric(vertical: 20),
+        Padding(
+          padding: const EdgeInsets.all(20.0),
           child: Text(
             'Saved Items',
             style: TextStyle(
-              color: Colors.white,
-              fontSize: 20,
+              color: _textColor,
+              fontSize: 24,
               fontWeight: FontWeight.bold,
             ),
           ),
@@ -487,30 +416,22 @@ Widget _buildHomeTab() {
             stream: _getListingsStream(),
             builder: (context, snapshot) {
               if (snapshot.connectionState == ConnectionState.waiting) {
-                return Center(
-                  child: CircularProgressIndicator(color: _primaryPurple),
-                );
+                return Center(child: CircularProgressIndicator(color: _primaryColor));
               }
 
               final allDocs = snapshot.data?.docs ?? [];
-              final savedDocs = allDocs
-                  .where((doc) => _savedItems.contains(doc.id))
-                  .toList();
+              final savedDocs = allDocs.where((doc) => _savedItems.contains(doc.id)).toList();
 
               if (_savedItems.isEmpty || savedDocs.isEmpty) {
                 return Center(
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(
-                        CupertinoIcons.heart,
-                        size: 64,
-                        color: _textSecondary.withOpacity(0.5),
-                      ),
+                      Icon(CupertinoIcons.heart, size: 64, color: Colors.grey[300]),
                       const SizedBox(height: 16),
                       Text(
                         "You haven't saved any items yet.",
-                        style: TextStyle(color: _textSecondary, fontSize: 16),
+                        style: TextStyle(color: _subtitleColor, fontSize: 16),
                       ),
                     ],
                   ),
@@ -518,17 +439,16 @@ Widget _buildHomeTab() {
               }
 
               return GridView.builder(
-                padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                padding: const EdgeInsets.only(left: 20.0, right: 20.0, bottom: 100.0),
                 gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                   crossAxisCount: 2,
-                  crossAxisSpacing: 12,
+                  crossAxisSpacing: 16,
                   mainAxisSpacing: 16,
-                  childAspectRatio: 0.75,
+                  childAspectRatio: 0.68,
                 ),
                 itemCount: savedDocs.length,
                 itemBuilder: (context, index) {
-                  final itemData =
-                      savedDocs[index].data() as Map<String, dynamic>;
+                  final itemData = savedDocs[index].data() as Map<String, dynamic>;
                   final String documentId = savedDocs[index].id;
                   return _buildProductCard(itemData, documentId);
                 },
@@ -540,163 +460,251 @@ Widget _buildHomeTab() {
     );
   }
 
-  // =========================================================================
-  // HELPER WIDGETS
-  // =========================================================================
-  // Converts Firestore Timestamp to "2 hours ago" format
+
+
   String _timeAgo(Timestamp? timestamp) {
     if (timestamp == null) return 'Just now';
-    
     final DateTime date = timestamp.toDate();
     final Duration diff = DateTime.now().difference(date);
 
-    if (diff.inDays > 365) return '${(diff.inDays / 365).floor()} years ago';
-    if (diff.inDays > 30) return '${(diff.inDays / 30).floor()} months ago';
-    if (diff.inDays > 7) return '${(diff.inDays / 7).floor()} weeks ago';
-    if (diff.inDays > 0) return '${diff.inDays} days ago';
-    if (diff.inHours > 0) return '${diff.inHours} hours ago';
-    if (diff.inMinutes > 0) return '${diff.inMinutes} mins ago';
+    if (diff.inDays > 365) return '${(diff.inDays / 365).floor()}y ago';
+    if (diff.inDays > 30) return '${(diff.inDays / 30).floor()}mo ago';
+    if (diff.inDays > 7) return '${(diff.inDays / 7).floor()}w ago';
+    if (diff.inDays > 0) return '${diff.inDays}d ago';
+    if (diff.inHours > 0) return '${diff.inHours}h ago';
+    if (diff.inMinutes > 0) return '${diff.inMinutes}m ago';
     return 'Just now';
   }
 
-  Widget _buildProductCard(Map<String, dynamic> item, String docId) {
+Widget _buildProductCard(Map<String, dynamic> item, String docId) {
     final String title = item['title'] ?? 'Unnamed Item';
     final int price = item['price'] ?? 0;
     final List<dynamic> images = item['images'] ?? [];
+    final String category = item['category'] ?? 'General';
+    
+    String rawStatus = item['status'] ?? 'In Stock';
+    if (rawStatus == 'active') rawStatus = 'In Stock';
+    
+    Color badgeTextColor;
+    Color badgeBgColor;
+    if (rawStatus.toLowerCase() == 'sold out') {
+      badgeTextColor = Colors.red.shade700;
+      badgeBgColor = Colors.red.shade50;
+    } else if (rawStatus.toLowerCase() == 'low stock') {
+      badgeTextColor = Colors.orange.shade700;
+      badgeBgColor = Colors.orange.shade50;
+    } else {
+      badgeTextColor = Colors.green.shade700;
+      badgeBgColor = Colors.green.shade50;
+    }
 
-    // We need the sellerId to fetch their name!
-    final String sellerId = item['sellerId'] ?? '';
     final bool isSaved = _savedItems.contains(docId);
 
     return GestureDetector(
       onTap: () {
         Navigator.push(
           context,
-          MaterialPageRoute(
-            builder: (context) =>
-                ItemDetailsScreen(itemData: item, docId: docId),
-          ),
+          MaterialPageRoute(builder: (context) => ItemDetailsScreen(itemData: item, docId: docId)),
         );
       },
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(16),
-        child: Stack(
-          fit: StackFit.expand,
+      child: Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: Colors.grey.shade200, width: 1),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // 1. FULL BLEED IMAGE (Fills the entire background)
-            _decodeAndDisplayImage(images),
-
-            // 2. FAVORITE BUTTON (Top Right)
-            Positioned(
-              top: 8,
-              right: 8,
-              child: GestureDetector(
-                onTap: () async {
-                  final String uid = FirebaseAuth.instance.currentUser!.uid;
-                  final userRef = FirebaseFirestore.instance
-                      .collection('Users')
-                      .doc(uid);
-
-                  if (isSaved) {
-                    await userRef.update({
-                      'savedItems': FieldValue.arrayRemove([docId]),
-                    });
-                  } else {
-                    await userRef.update({
-                      'savedItems': FieldValue.arrayUnion([docId]),
-                    });
-                  }
-                },
-                child: Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: Colors.black.withOpacity(
-                      0.5,
-                    ), // Slightly darker for contrast
-                    shape: BoxShape.circle,
-                  ),
-                  child: Icon(
-                    isSaved ? CupertinoIcons.heart_fill : CupertinoIcons.heart,
-                    color: isSaved ? Colors.redAccent : Colors.white,
-                    size: 18,
+            Expanded(
+              flex: 5,
+              child: Container(
+                width: double.infinity,
+                decoration: BoxDecoration(
+                  color: Colors.grey.shade50,
+                  borderRadius: const BorderRadius.vertical(top: Radius.circular(11)),
+                ),
+                child: ClipRRect(
+                  borderRadius: const BorderRadius.vertical(top: Radius.circular(11)),
+                  child: Padding(
+                    padding: const EdgeInsets.all(12.0),
+                    child: _decodeAndDisplayImage(images),
                   ),
                 ),
               ),
             ),
-
-            // 3. FROSTED GLASS BOTTOM PANEL (Text & Seller Info)
-// 3. FROSTED GLASS BOTTOM PANEL (Text, Seller Info & Time)
-            Positioned(
-              bottom: 0,
-              left: 0,
-              right: 0,
-              child: ClipRRect(
-                child: BackdropFilter(
-                  filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
-                  child: Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: _cardColor.withOpacity(0.7),
-                      border: Border(top: BorderSide(color: Colors.white.withOpacity(0.1), width: 1)),
-                    ),
-                    child: Column(
+            
+            Expanded(
+              flex: 4,
+              child: Padding(
+                padding: const EdgeInsets.all(12.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisSize: MainAxisSize.min,
                       children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Expanded(
+                              child: Text(
+                                title,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: const TextStyle(
+                                  color: Color(0xFF1E1E1E),
+                                  fontWeight: FontWeight.w600,
+                                  fontSize: 13,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            Text(
+                              '\$$price', 
+                              style: const TextStyle(
+                                color: Color(0xFF1E1E1E),
+                                fontSize: 14,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 2),
                         Text(
-                          title,
+                          category,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w600, fontSize: 14, height: 1.2),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          'EGP $price',
-                          style: TextStyle(color: _primaryPurple, fontSize: 15, fontWeight: FontWeight.bold),
-                        ),
-                        const SizedBox(height: 6),
-                        
-                        // 4. SELLER NAME & TIME AGO
-                        FutureBuilder<DocumentSnapshot>(
-                          future: FirebaseFirestore.instance.collection('Users').doc(sellerId).get(),
-                          builder: (context, snapshot) {
-                            String sellerName = 'Loading...';
-                            
-                            if (snapshot.hasData && snapshot.data!.exists) {
-                              final userData = snapshot.data!.data() as Map<String, dynamic>;
-                              sellerName = '${userData['firstName'] ?? ''} ${userData['lastName'] ?? ''}'.trim();
-                            } else if (snapshot.hasError || (snapshot.hasData && !snapshot.data!.exists)) {
-                              sellerName = 'Unknown Seller';
-                            }
-
-                            // Calculate the relative time
-                            final Timestamp? createdAt = item['createdAt'] as Timestamp?;
-                            final String timeString = _timeAgo(createdAt);
-
-                            return Row(
-                              children: [
-                                const Icon(Icons.person_outline, color: Colors.white54, size: 12),
-                                const SizedBox(width: 4),
-                                Expanded(
-                                  child: Text(
-                                    sellerName,
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                    style: const TextStyle(color: Colors.white54, fontSize: 11),
-                                  ),
-                                ),
-                                // NEW: The Time Ago text aligned to the right
-                                Text(
-                                  timeString,
-                                  style: const TextStyle(color: Colors.white38, fontSize: 10, fontStyle: FontStyle.italic),
-                                ),
-                              ],
-                            );
-                          },
+                          style: TextStyle(
+                            color: Colors.grey.shade400,
+                            fontSize: 11,
+                          ),
                         ),
                       ],
                     ),
-                  ),
+                    
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(vertical: 6),
+                            decoration: BoxDecoration(
+                              color: badgeBgColor,
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                CircleAvatar(radius: 3, backgroundColor: badgeTextColor),
+                                const SizedBox(width: 6),
+                                Text(
+                                  rawStatus,
+                                  style: TextStyle(
+                                    color: badgeTextColor,
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        
+                        GestureDetector(
+                          onTap: () {
+                            showModalBottomSheet(
+                              context: context,
+                              backgroundColor: Colors.white,
+                              shape: const RoundedRectangleBorder(
+                                borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+                              ),
+                              builder: (BuildContext sheetContext) { 
+                                return SafeArea(
+                                  child: Padding(
+                                    padding: const EdgeInsets.symmetric(vertical: 12.0),
+                                    child: Column(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        Container(
+                                          width: 40,
+                                          height: 4,
+                                          margin: const EdgeInsets.only(bottom: 12),
+                                          decoration: BoxDecoration(
+                                            color: Colors.grey.shade300,
+                                            borderRadius: BorderRadius.circular(2),
+                                          ),
+                                        ),
+                                        ListTile(
+                                          leading: Icon(
+                                            isSaved ? CupertinoIcons.heart_fill : CupertinoIcons.heart,
+                                            color: isSaved ? Colors.redAccent : const Color(0xFF1E1E1E),
+                                          ),
+                                          title: Text(
+                                            isSaved ? 'Remove from Saved' : 'Save Item',
+                                            style: const TextStyle(fontWeight: FontWeight.w500, color: Color(0xFF1E1E1E)),
+                                          ),
+                                          onTap: () async {
+                                            Navigator.pop(sheetContext); 
+                                            
+                                            final String uid = FirebaseAuth.instance.currentUser!.uid;
+                                            final userRef = FirebaseFirestore.instance.collection('Users').doc(uid);
+                                            
+                                            if (isSaved) {
+                                              await userRef.update({'savedItems': FieldValue.arrayRemove([docId])});
+                                              if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Removed from saved items')));
+                                            } else {
+                                              await userRef.update({'savedItems': FieldValue.arrayUnion([docId])});
+                                              if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Item saved!')));
+                                            }
+                                          },
+                                        ),
+                                        ListTile(
+                                          leading: const Icon(Icons.visibility_outlined, color: Color(0xFF1E1E1E)),
+                                          title: const Text('View Details', style: TextStyle(fontWeight: FontWeight.w500, color: Color(0xFF1E1E1E))),
+                                          onTap: () {
+                                            Navigator.pop(sheetContext);
+                                            Navigator.push(
+                                              context, 
+                                              MaterialPageRoute(builder: (context) => ItemDetailsScreen(itemData: item, docId: docId)),
+                                            );
+                                          },
+                                        ),
+                                        ListTile(
+                                          leading: const Icon(Icons.flag_outlined, color: Colors.redAccent),
+                                          title: const Text('Report Listing', style: TextStyle(color: Colors.redAccent, fontWeight: FontWeight.w500)),
+                                          onTap: () {
+                                            Navigator.pop(sheetContext); 
+                                            ScaffoldMessenger.of(context).showSnackBar( 
+                                              const SnackBar(content: Text('Listing reported to moderators for review.')),
+                                            );
+                                          },
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                );
+                              },
+                            );
+                          },
+                          child: Container(
+                            padding: const EdgeInsets.all(4),
+                            decoration: BoxDecoration(
+                              border: Border.all(color: Colors.grey.shade200),
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                            child: Icon(
+                              Icons.more_horiz,
+                              color: Colors.grey.shade500,
+                              size: 16,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
                 ),
               ),
             ),
@@ -709,10 +717,8 @@ Widget _buildHomeTab() {
   Widget _decodeAndDisplayImage(List<dynamic> images) {
     if (images.isEmpty) {
       return Container(
-        color: _bgColor,
-        child: const Center(
-          child: Icon(Icons.image_not_supported, color: Colors.white54),
-        ),
+        color: _inputFillColor,
+        child: Center(child: Icon(Icons.image_not_supported_outlined, color: Colors.grey[400], size: 32)),
       );
     }
     String base64String = images[0] as String;
@@ -728,14 +734,44 @@ Widget _buildHomeTab() {
       );
     } catch (e) {
       return Container(
-        color: _bgColor,
-        child: const Center(
-          child: Icon(Icons.broken_image, color: Colors.white54),
-        ),
+        color: _inputFillColor,
+        child: Center(child: Icon(Icons.broken_image_outlined, color: Colors.grey[400], size: 32)),
       );
     }
   }
 
+
+  Widget _buildAddButton() {
+    return GestureDetector(
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            fullscreenDialog: true,
+            builder: (context) => const AddListingScreen(),
+          ),
+        );
+      },
+      child: Container(
+        height: 52,
+        width: 52,
+        decoration: BoxDecoration(
+          color: _primaryColor, 
+          shape: BoxShape.circle,
+          boxShadow: [
+            BoxShadow(
+              color: _primaryColor.withOpacity(0.4),
+              blurRadius: 12,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: Icon(Icons.add, color: Colors.green[900], size: 28),
+      ),
+    );
+  }
+
+ 
   Widget _buildNavItem(IconData icon, String label, int index) {
     final isSelected = _currentTab == index && index != 3;
 
@@ -749,25 +785,38 @@ Widget _buildHomeTab() {
           });
         }
       },
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(
-            icon,
-            color: isSelected ? _primaryPurple : _textSecondary,
-            size: 24,
-          ),
-          const SizedBox(height: 4),
-          Text(
-            label,
-            style: TextStyle(
-              color: isSelected ? _primaryPurple : _textSecondary,
-              fontSize: 10,
-              fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+      behavior: HitTestBehavior.opaque,
+      child: SizedBox(
+        width: 60, 
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+   
+            AnimatedContainer(
+              duration: const Duration(milliseconds: 200),
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+              decoration: BoxDecoration(
+                color: isSelected ? Colors.green.shade50 : Colors.transparent,
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Icon(
+                icon,
+                color: isSelected ? Colors.green[800] : Colors.grey[400],
+                size: 24,
+              ),
             ),
-          ),
-        ],
+            const SizedBox(height: 4),
+            Text(
+              label,
+              style: TextStyle(
+                color: isSelected ? Colors.green[800] : Colors.grey[400],
+                fontSize: 10,
+                fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

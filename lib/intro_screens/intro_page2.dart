@@ -9,7 +9,7 @@ class IntroPage2 extends StatelessWidget {
  return Container(
         width: double.infinity,
         height: double.infinity,
-      color: const Color.fromARGB(255, 38, 2, 58),
+      color: const Color.fromARGB(255, 1, 37, 48),
         // decoration: const BoxDecoration(
         //   gradient: LinearGradient(
         //     begin: Alignment.topCenter,
@@ -36,13 +36,11 @@ class IntroPage2 extends StatelessWidget {
           ),
           const SizedBox(height: 13),
           
-          // 2. Replace Image.asset with Lottie.asset
           Lottie.asset(
-            "assets/vid/chat.json", // Make sure this matches your exact file name
+            "assets/vid/chat.json",
             width: 350,   
             height: 350,  
             fit: BoxFit.contain,
-            // Optional: You can easily loop it or stop it
             repeat: true, 
           )
         ],

@@ -1,12 +1,10 @@
 import 'dart:convert';
-import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:yalla_safqa/edit_listing.dart';
-
+import 'package:FoundIT/edit_listing.dart';
 
 class ItemDetailsScreen extends StatefulWidget {
   final Map<String, dynamic> itemData;
@@ -26,103 +24,107 @@ class _ItemDetailsScreenState extends State<ItemDetailsScreen> {
   int _currentPage = 0;
   final String currentUserId = FirebaseAuth.instance.currentUser!.uid;
   
-  // 1. We declare the variable
   late Map<String, dynamic> displayData;
 
-  // 2. We MUST initialize it when the screen opens!
+
+  final Color _primaryColor = const Color(0xFFB5E575);
+  final Color _textColor = const Color(0xFF1E1E1E);
+  final Color _subtitleColor = const Color(0xFF8E8E8E);
+  final Color _bgColor = const Color(0xFFF9F9F9);
+
   @override
   void initState() {
     super.initState();
     displayData = Map.from(widget.itemData); 
   }
 
-  Widget _decodeSingleImage(String base64String) {
-    if (base64String.contains(',')) {
-      base64String = base64String.split(',').last;
-    }
+  MemoryImage? _getMemoryImage(String? base64String) {
+    if (base64String == null || base64String.isEmpty) return null;
     try {
-      Uint8List decodedBytes = base64Decode(base64String);
-      return Image.memory(
-        decodedBytes,
-        width: double.infinity,
-        height: 350,
-        fit: BoxFit.cover,
-      );
+      String cleanString = base64String.contains(',') ? base64String.split(',').last : base64String;
+      return MemoryImage(base64Decode(cleanString));
     } catch (e) {
-      return const Center(
-        child: Icon(Icons.broken_image, color: Colors.white54, size: 50),
-      );
+      return null;
     }
   }
 
-  Future<void> _markAsSold() async {
-    bool confirm =
-        await showDialog(
-          context: context,
-          builder: (context) => AlertDialog(
-            backgroundColor: const Color(0xFF1B1B28),
-            title: const Text(
-              'Mark as Sold?',
-              style: TextStyle(color: Colors.white),
-            ),
-            content: const Text(
-              'This will remove the item from the main store page. Are you sure?',
-              style: TextStyle(color: Colors.white70),
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context, false),
-                child: const Text(
-                  'Cancel',
-                  style: TextStyle(color: Colors.white54),
-                ),
-              ),
-              TextButton(
-                onPressed: () => Navigator.pop(context, true),
-                child: const Text(
-                  'Mark Sold',
-                  style: TextStyle(
-                    color: Color(0xFF6E56FF),
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-            ],
+  void _openFullScreenImage(List<dynamic> images, int initialIndex) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => Scaffold(
+          backgroundColor: Colors.black,
+          appBar: AppBar(
+            backgroundColor: Colors.transparent,
+            elevation: 0,
+            iconTheme: const IconThemeData(color: Colors.white),
           ),
-        ) ??
-        false;
+          extendBodyBehindAppBar: true,
+          body: PageView.builder(
+            controller: PageController(initialPage: initialIndex),
+            itemCount: images.length,
+            itemBuilder: (context, index) {
+              final MemoryImage? img = _getMemoryImage(images[index] as String);
+              if (img == null) return const Center(child: Icon(Icons.broken_image, color: Colors.white, size: 50));
+              
+              return InteractiveViewer(
+                minScale: 1.0,
+                maxScale: 4.0,
+                child: Center(
+                  child: Image(image: img, fit: BoxFit.contain),
+                ),
+              );
+            },
+          ),
+        ),
+      ),
+    );
+  }
+
+  Future<void> _markAsSold() async {
+    bool confirm = await showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: Colors.white,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: Text('Mark as Sold?', style: TextStyle(color: _textColor, fontWeight: FontWeight.bold)),
+        content: Text(
+          'This will update the item status and remove it from the active feed. Are you sure?',
+          style: TextStyle(color: _subtitleColor),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: Text('Cancel', style: TextStyle(color: _subtitleColor, fontWeight: FontWeight.bold)),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.redAccent,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+              elevation: 0,
+            ),
+            child: const Text('Mark Sold', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+          ),
+        ],
+      ),
+    ) ?? false;
 
     if (confirm && mounted) {
       try {
-        await FirebaseFirestore.instance
-            .collection('listings')
-            .doc(widget.docId)
-            .update({'status': 'sold'});
-
+        await FirebaseFirestore.instance.collection('listings').doc(widget.docId).update({'status': 'sold'});
         if (mounted) {
           Navigator.pop(context);
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(const SnackBar(content: Text('Item marked as sold!')));
+          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Item marked as sold!')));
         }
       } catch (e) {
-        if (mounted) {
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(SnackBar(content: Text('Error updating item: $e')));
-        }
+        if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e')));
       }
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    const Color bgColor = Color.fromARGB(255, 38, 2, 58);
-    const Color cardColor = Color(0xFF1B1B28);
-    const Color primaryPurple = Color(0xFF6E56FF);
-    const Color textSecondary = Color(0xFF8E8E9F);
-
-    // 3. Update all of these to read from displayData instead of widget.itemData
     final String title = displayData['title'] ?? 'Unnamed Item';
     final int price = displayData['price'] ?? 0;
     final String description = displayData['description'] ?? 'No description provided.';
@@ -134,134 +136,122 @@ class _ItemDetailsScreenState extends State<ItemDetailsScreen> {
     final bool isMyListing = currentUserId == sellerId;
 
     return Scaffold(
-      backgroundColor: bgColor,
+      backgroundColor: _bgColor,
       extendBodyBehindAppBar: true,
+      
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
-        leading: IconButton(
-          icon: Container(
-            padding: const EdgeInsets.all(8),
-            decoration: const BoxDecoration(
-              color: Colors.black45,
-              shape: BoxShape.circle,
+        leading: Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: InkWell(
+            onTap: () => Navigator.pop(context),
+            child: Container(
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.9),
+                shape: BoxShape.circle,
+                boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.1), blurRadius: 8)],
+              ),
+              child: const Icon(Icons.arrow_back_ios_new, color: Colors.black87, size: 18),
             ),
-            child: const Icon(Icons.arrow_back, color: Colors.white),
           ),
-          onPressed: () => Navigator.pop(context),
         ),
       ),
+
       body: Column(
         children: [
-          // 1. SCROLLABLE CONTENT
           Expanded(
             child: SingleChildScrollView(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Container(
-                    width: double.infinity,
-                    height: 350,
-                    color: cardColor,
-                    child: images.isEmpty
-                        ? const Center(
-                            child: Icon(
-                              Icons.image_not_supported,
-                              color: Colors.white54,
-                              size: 50,
-                            ),
-                          )
-                        : Stack(
-                            children: [
-                              PageView.builder(
-                                itemCount: images.length,
-                                onPageChanged: (index) {
-                                  setState(() => _currentPage = index);
-                                },
-                                itemBuilder: (context, index) {
-                                  return _decodeSingleImage(
-                                    images[index] as String,
-                                  );
-                                },
-                              ),
-                              if (images.length > 1)
-                                Positioned(
-                                  bottom: 16,
-                                  left: 0,
-                                  right: 0,
-                                  child: Row(
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    children: List.generate(images.length, (
-                                      index,
-                                    ) {
-                                      return AnimatedContainer(
-                                        duration: const Duration(
-                                          milliseconds: 300,
-                                        ),
-                                        margin: const EdgeInsets.symmetric(
-                                          horizontal: 4,
-                                        ),
-                                        width: _currentPage == index ? 24 : 8,
-                                        height: 8,
-                                        decoration: BoxDecoration(
-                                          color: _currentPage == index
-                                              ? primaryPurple
-                                              : Colors.white54,
-                                          borderRadius: BorderRadius.circular(
-                                            4,
-                                          ),
-                                        ),
-                                      );
-                                    }),
-                                  ),
+                  
+                  GestureDetector(
+                    onTap: () {
+                      if (images.isNotEmpty) _openFullScreenImage(images, _currentPage);
+                    },
+                    child: Container(
+                      width: double.infinity,
+                      height: 380,
+                      color: Colors.grey.shade200,
+                      child: images.isEmpty
+                          ? Icon(Icons.image_not_supported_outlined, color: Colors.grey.shade400, size: 64)
+                          : Stack(
+                              fit: StackFit.expand,
+                              children: [
+                                PageView.builder(
+                                  itemCount: images.length,
+                                  onPageChanged: (index) => setState(() => _currentPage = index),
+                                  itemBuilder: (context, index) {
+                                    final img = _getMemoryImage(images[index] as String);
+                                    if (img == null) return const Center(child: Icon(Icons.broken_image));
+                                    return Image(image: img, fit: BoxFit.cover);
+                                  },
                                 ),
-                            ],
-                          ),
+                           
+                                if (images.length > 1)
+                                  Positioned(
+                                    bottom: 16,
+                                    left: 0,
+                                    right: 0,
+                                    child: Row(
+                                      mainAxisAlignment: MainAxisAlignment.center,
+                                      children: List.generate(images.length, (index) {
+                                        return AnimatedContainer(
+                                          duration: const Duration(milliseconds: 300),
+                                          margin: const EdgeInsets.symmetric(horizontal: 4),
+                                          width: _currentPage == index ? 24 : 8,
+                                          height: 8,
+                                          decoration: BoxDecoration(
+                                            color: _currentPage == index ? Colors.white : Colors.white.withOpacity(0.5),
+                                            borderRadius: BorderRadius.circular(4),
+                                            boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.1), blurRadius: 2)],
+                                          ),
+                                        );
+                                      }),
+                                    ),
+                                  ),
+                              ],
+                            ),
+                    ),
                   ),
 
-                  Padding(
-                    padding: const EdgeInsets.all(20.0),
+              
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(24.0),
+                    decoration: const BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.vertical(bottom: Radius.circular(24)),
+                    ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
+                      
                         Row(
                           children: [
                             Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 10,
-                                vertical: 4,
-                              ),
+                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                               decoration: BoxDecoration(
-                                color: primaryPurple.withOpacity(0.2),
+                                color: Colors.grey.shade100,
                                 borderRadius: BorderRadius.circular(8),
                               ),
                               child: Text(
                                 category,
-                                style: const TextStyle(
-                                  color: primaryPurple,
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.bold,
-                                ),
+                                style: TextStyle(color: Colors.grey.shade700, fontSize: 12, fontWeight: FontWeight.w600),
                               ),
                             ),
-                            const SizedBox(width: 10),
+                            const SizedBox(width: 8),
                             Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 10,
-                                vertical: 4,
-                              ),
+                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                               decoration: BoxDecoration(
-                                color: isNew
-                                    ? Colors.green.withOpacity(0.2)
-                                    : Colors.orange.withOpacity(0.2),
+                                color: isNew ? Colors.green.shade50 : Colors.orange.shade50,
                                 borderRadius: BorderRadius.circular(8),
                               ),
                               child: Text(
                                 isNew ? 'Brand New' : 'Used',
                                 style: TextStyle(
-                                  color: isNew
-                                      ? Colors.greenAccent
-                                      : Colors.orangeAccent,
+                                  color: isNew ? Colors.green.shade700 : Colors.orange.shade700,
                                   fontSize: 12,
                                   fontWeight: FontWeight.bold,
                                 ),
@@ -271,45 +261,86 @@ class _ItemDetailsScreenState extends State<ItemDetailsScreen> {
                         ),
                         const SizedBox(height: 16),
 
+                        
                         Text(
                           title,
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 24,
-                            fontWeight: FontWeight.bold,
-                          ),
+                          style: TextStyle(color: _textColor, fontSize: 24, fontWeight: FontWeight.bold, height: 1.2),
                         ),
                         const SizedBox(height: 8),
                         Text(
-                          'EGP $price',
-                          style: const TextStyle(
-                            color: primaryPurple,
-                            fontSize: 22,
-                            fontWeight: FontWeight.w800,
-                          ),
+                          '\$$price',
+                          style: TextStyle(color: Colors.green[800], fontSize: 26, fontWeight: FontWeight.w900),
                         ),
+                      ],
+                    ),
+                  ),
 
-                        const SizedBox(height: 24),
-                        const Divider(color: Colors.white24),
-                        const SizedBox(height: 16),
+           
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
+                    child: FutureBuilder<DocumentSnapshot>(
+                      future: FirebaseFirestore.instance.collection('Users').doc(sellerId).get(),
+                      builder: (context, snapshot) {
+                        String sellerName = 'Loading...';
+                        MemoryImage? sellerImage;
+                        
+                        if (snapshot.connectionState == ConnectionState.done && snapshot.hasData && snapshot.data!.exists) {
+                          final userData = snapshot.data!.data() as Map<String, dynamic>;
+                          sellerName = '${userData['firstName'] ?? ''} ${userData['lastName'] ?? ''}'.trim();
+                          if (sellerName.isEmpty) sellerName = 'Unknown User';
+                          sellerImage = _getMemoryImage(userData['profileImage']);
+                        }
 
-                        const Text(
-                          'Description',
-                          style: TextStyle(
+                        return Container(
+                          padding: const EdgeInsets.all(16),
+                          decoration: BoxDecoration(
                             color: Colors.white,
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
+                            borderRadius: BorderRadius.circular(16),
+                            border: Border.all(color: Colors.grey.shade200),
                           ),
-                        ),
-                        const SizedBox(height: 8),
+                          child: Row(
+                            children: [
+                              CircleAvatar(
+                                radius: 24,
+                                backgroundColor: Colors.grey.shade100,
+                                backgroundImage: sellerImage,
+                                child: sellerImage == null ? Icon(Icons.person_outline, color: Colors.grey.shade400) : null,
+                              ),
+                              const SizedBox(width: 16),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text('Sold by', style: TextStyle(color: _subtitleColor, fontSize: 12)),
+                                    const SizedBox(height: 2),
+                                    Text(
+                                      sellerName,
+                                      style: TextStyle(color: _textColor, fontSize: 16, fontWeight: FontWeight.bold),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              Icon(Icons.verified_user_outlined, color: Colors.green[700], size: 20),
+                            ],
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+
+                 
+                  Padding(
+                    padding: const EdgeInsets.all(24.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text('Description', style: TextStyle(color: _textColor, fontSize: 18, fontWeight: FontWeight.bold)),
+                        const SizedBox(height: 12),
                         Text(
                           description,
-                          style: const TextStyle(
-                            color: textSecondary,
-                            fontSize: 14,
-                            height: 1.5,
-                          ),
+                          style: TextStyle(color: Colors.grey.shade700, fontSize: 15, height: 1.6),
                         ),
+                        const SizedBox(height: 40), 
                       ],
                     ),
                   ),
@@ -318,44 +349,30 @@ class _ItemDetailsScreenState extends State<ItemDetailsScreen> {
             ),
           ),
 
-          // 2. DYNAMIC BOTTOM BAR
+   
           Container(
-            padding: const EdgeInsets.all(20),
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
             decoration: BoxDecoration(
-              color: cardColor,
-              borderRadius: const BorderRadius.vertical(
-                top: Radius.circular(20),
-              ),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.2),
-                  blurRadius: 10,
-                  offset: const Offset(0, -5),
-                ),
-              ],
+              color: Colors.white,
+              boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 20, offset: const Offset(0, -5))],
             ),
             child: SafeArea(
               top: false,
               child: SizedBox(
-                width: double.infinity,
-                height: 55,
+                height: 56,
                 child: isMyListing
+                   
                     ? Row(
                         children: [
                           Expanded(
                             child: OutlinedButton(
-                              // 4. Update the Edit button to await the changes and setState
                               onPressed: () async {
                                 final newData = await Navigator.push(
                                   context,
                                   MaterialPageRoute(
-                                    builder: (context) => EditListingScreen(
-                                      itemData: displayData,
-                                      docId: widget.docId,
-                                    ),
+                                    builder: (context) => EditListingScreen(itemData: displayData, docId: widget.docId),
                                   ),
                                 );
-
                                 if (newData != null && newData is Map) {
                                   setState(() {
                                     displayData['title'] = newData['title'];
@@ -365,22 +382,10 @@ class _ItemDetailsScreenState extends State<ItemDetailsScreen> {
                                 }
                               },
                               style: OutlinedButton.styleFrom(
-                                side: const BorderSide(
-                                  color: primaryPurple,
-                                  width: 2,
-                                ),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
+                                side: BorderSide(color: Colors.grey.shade300, width: 2),
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                               ),
-                              child: const Text(
-                                'Edit',
-                                style: TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.bold,
-                                  color: primaryPurple,
-                                ),
-                              ),
+                              child: Text('Edit', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: _textColor)),
                             ),
                           ),
                           const SizedBox(width: 16),
@@ -388,46 +393,33 @@ class _ItemDetailsScreenState extends State<ItemDetailsScreen> {
                             child: ElevatedButton(
                               onPressed: _markAsSold,
                               style: ElevatedButton.styleFrom(
-                                backgroundColor: Colors.green,
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
+                                backgroundColor: _textColor, 
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                                elevation: 0,
                               ),
-                              child: const Text(
-                                'Mark Sold',
-                                style: TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.white,
-                                ),
-                              ),
+                              child: const Text('Mark Sold', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)),
                             ),
                           ),
                         ],
                       )
                     : FutureBuilder<DocumentSnapshot>(
-                        future: FirebaseFirestore.instance
-                            .collection('Users')
-                            .doc(sellerId)
-                            .get(),
+                        future: FirebaseFirestore.instance.collection('Users').doc(sellerId).get(),
                         builder: (context, snapshot) {
                           String phoneText = "Loading...";
                           String? rawPhone;
                           bool isClickable = false;
 
-                          if (snapshot.connectionState ==
-                              ConnectionState.done) {
+                          if (snapshot.connectionState == ConnectionState.done) {
                             if (snapshot.hasError) {
                               phoneText = "Database Error";
                             } else if (!snapshot.data!.exists) {
-                              phoneText = "Profile Missing"; 
+                              phoneText = "Profile Missing";
                             } else {
-                              final userData =
-                                  snapshot.data!.data() as Map<String, dynamic>;
+                              final userData = snapshot.data!.data() as Map<String, dynamic>;
                               rawPhone = userData['phone'];
 
                               if (rawPhone != null && rawPhone.isNotEmpty) {
-                                phoneText = 'WhatsApp: $rawPhone';
+                                phoneText = 'Contact via WhatsApp';
                                 isClickable = true;
                               } else {
                                 phoneText = 'No Phone Provided';
@@ -436,89 +428,41 @@ class _ItemDetailsScreenState extends State<ItemDetailsScreen> {
                           }
 
                           return ElevatedButton(
-                            onPressed: !isClickable
-                                ? null
-                                : () async {
-                                    String cleanPhone = rawPhone!.replaceAll(
-                                      RegExp(r'\D'),
-                                      '',
-                                    );
-                                    if (cleanPhone.startsWith('01') &&
-                                        cleanPhone.length == 11) {
-                                      cleanPhone = '2$cleanPhone';
-                                    }
+                            onPressed: !isClickable ? null : () async {
+                              String cleanPhone = rawPhone!.replaceAll(RegExp(r'\D'), '');
+                              if (cleanPhone.startsWith('01') && cleanPhone.length == 11) {
+                                cleanPhone = '2$cleanPhone'; 
+                              }
 
-                                    // 1. Grab the product details
-                                    final String productTitle = displayData['title'] ?? 'this item';
-                                    final int productPrice = displayData['price'] ?? 0;
+                              final String productTitle = displayData['title'] ?? 'this item';
+                              final int productPrice = displayData['price'] ?? 0;
+                              final String message = "Hello! I'm interested in your listing on FoundIt:\n\n*$productTitle*\nPrice: \$$productPrice\n\nIs this still available?";
+                              final String encodedMessage = Uri.encodeComponent(message);
 
-                                    // 2. Construct the message
-                                    final String message = "Hello! I'm interested in your listing on Yallasafqa:\n\n*$productTitle*\nPrice: $productPrice EGP\n\nIs this still available?";
-                                    
-                                    // 3. URL-Encode the message
-                                    final String encodedMessage = Uri.encodeComponent(message);
-
-                                    // 4. Add the encoded message to the WhatsApp URL
-                                    final Uri url = Uri.parse(
-                                      'https://wa.me/$cleanPhone?text=$encodedMessage',
-                                    );
-                                    if (!await launchUrl(
-                                      url,
-                                      mode: LaunchMode.externalApplication,
-                                    )) {
-                                      if (context.mounted) {
-                                        ScaffoldMessenger.of(
-                                          context,
-                                        ).showSnackBar(
-                                          const SnackBar(
-                                            content: Text(
-                                              'Could not open WhatsApp.',
-                                            ),
-                                          ),
-                                        );
-                                      }
-                                    }
-                                  },
+                              final Uri url = Uri.parse('https://wa.me/$cleanPhone?text=$encodedMessage');
+                              
+                              if (!await launchUrl(url, mode: LaunchMode.externalApplication)) {
+                                if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Could not open WhatsApp.')));
+                              }
+                            },
                             style: ElevatedButton.styleFrom(
-                              backgroundColor: isClickable
-                                  ? const Color(0xFF25D366)
-                                  : Colors.grey[800],
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 16,
-                              ),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              elevation: isClickable ? 4 : 0,
+                              backgroundColor: isClickable ? const Color(0xFF25D366) : Colors.grey.shade300,
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                              elevation: 0,
                             ),
                             child: Row(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
-                                FaIcon(
-                                  FontAwesomeIcons.whatsapp,
-                                  color: isClickable
-                                      ? Colors.white
-                                      : Colors.white54,
-                                  size: 24,
-                                ),
+                                FaIcon(FontAwesomeIcons.whatsapp, color: isClickable ? Colors.white : Colors.grey.shade500, size: 24),
                                 const SizedBox(width: 12),
                                 Text(
                                   phoneText,
                                   style: TextStyle(
                                     fontSize: 16,
                                     fontWeight: FontWeight.bold,
-                                    color: isClickable
-                                        ? Colors.white
-                                        : Colors.white54,
+                                    color: isClickable ? Colors.white : Colors.grey.shade500,
                                   ),
                                 ),
-                                const Spacer(),
-                                if (isClickable)
-                                  const Icon(
-                                    Icons.arrow_forward_ios,
-                                    color: Colors.white,
-                                    size: 16,
-                                  ),
                               ],
                             ),
                           );

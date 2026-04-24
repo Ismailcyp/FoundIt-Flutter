@@ -13,30 +13,27 @@ class AddListingScreen extends StatefulWidget {
 }
 
 class _AddListingScreenState extends State<AddListingScreen> {
-  // --- STATE VARIABLES ---
   final TextEditingController _titleController = TextEditingController();
   final TextEditingController _descController = TextEditingController();
   final TextEditingController _priceController = TextEditingController();
   
-  // CHANGED: Using a nullable String for the dropdown is much cleaner than a TextEditingController
   String? _selectedCategory; 
   
-  bool _isNew = true; // true = New, false = Used
+  bool _isNew = true; 
   bool _isLoading = false;
   
   String? _titleError;
   String? _priceError;
   String? _categoryError; 
 
-  // Image Picker State
   final ImagePicker _picker = ImagePicker();
   final List<XFile> _selectedImages = [];
 
-  // Colors
-  final Color _bgColor = const Color.fromARGB(255, 38, 2, 58);
-  final Color _inputBgColor = const Color(0xFF1B1B28);
-  final Color _primaryPurple = const Color(0xFF6E56FF);
-  final Color _textSecondary = const Color(0xFF8E8E9F);
+  final Color _primaryColor = const Color(0xFFB5E575); 
+  final Color _textColor = const Color(0xFF1E1E1E);
+  final Color _subtitleColor = const Color(0xFF8E8E8E);
+  final Color _inputFillColor = const Color(0xFFF5F5F5);
+  final Color _bgColor = Colors.white;
 
   @override
   void dispose() {
@@ -46,24 +43,23 @@ class _AddListingScreenState extends State<AddListingScreen> {
     super.dispose();
   }
 
-  // --- IMAGE PICKER LOGIC ---
   Future<void> _pickImage(ImageSource source) async {
-    if (_selectedImages.length >= 3) return;
-
     try {
       final XFile? pickedFile = await _picker.pickImage(
-        source: source,
-        imageQuality: 80, 
+        source: source, 
+        maxWidth: 800,
+        maxHeight: 800,
+        imageQuality: 70,
       );
 
       if (pickedFile != null) {
         setState(() {
-          _selectedImages.add(pickedFile);
+          _selectedImages.add(pickedFile); 
         });
       }
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Failed to pick image')),
+        const SnackBar(content: Text('Failed to pick and compress image.')),
       );
     }
   }
@@ -78,31 +74,45 @@ class _AddListingScreenState extends State<AddListingScreen> {
 
     showModalBottomSheet(
       context: context,
-      backgroundColor: _inputBgColor,
+      backgroundColor: Colors.white,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
       builder: (BuildContext context) {
         return SafeArea(
-          child: Wrap(
-            children: [
-              ListTile(
-                leading: const Icon(Icons.photo_library, color: Colors.white),
-                title: const Text('Photo Gallery', style: TextStyle(color: Colors.white)),
-                onTap: () {
-                  Navigator.of(context).pop();
-                  _pickImage(ImageSource.gallery);
-                },
-              ),
-              ListTile(
-                leading: const Icon(Icons.camera_alt, color: Colors.white),
-                title: const Text('Camera', style: TextStyle(color: Colors.white)),
-                onTap: () {
-                  Navigator.of(context).pop();
-                  _pickImage(ImageSource.camera);
-                },
-              ),
-            ],
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 12.0),
+            child: Wrap(
+              children: [
+                Center(
+                  child: Container(
+                    width: 40,
+                    height: 4,
+                    margin: const EdgeInsets.only(bottom: 12),
+                    decoration: BoxDecoration(
+                      color: Colors.grey.shade300,
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                  ),
+                ),
+                ListTile(
+                  leading: Icon(Icons.photo_library_outlined, color: _textColor),
+                  title: Text('Photo Gallery', style: TextStyle(color: _textColor, fontWeight: FontWeight.w500)),
+                  onTap: () {
+                    Navigator.of(context).pop();
+                    _pickImage(ImageSource.gallery);
+                  },
+                ),
+                ListTile(
+                  leading: Icon(Icons.camera_alt_outlined, color: _textColor),
+                  title: Text('Camera', style: TextStyle(color: _textColor, fontWeight: FontWeight.w500)),
+                  onTap: () {
+                    Navigator.of(context).pop();
+                    _pickImage(ImageSource.camera);
+                  },
+                ),
+              ],
+            ),
           ),
         );
       },
@@ -120,22 +130,26 @@ class _AddListingScreenState extends State<AddListingScreen> {
     return Scaffold(
       backgroundColor: _bgColor,
       appBar: AppBar(
-        backgroundColor: Colors.transparent,
+        backgroundColor: Colors.white,
         elevation: 0,
+        surfaceTintColor: Colors.transparent,
         leading: IconButton(
-          icon: Icon(Icons.close, color: _primaryPurple),
+          icon: Icon(Icons.close, color: _textColor),
           onPressed: () => Navigator.pop(context),
         ),
-        title: const Text(
+        title: Text(
           'New Listing',
           style: TextStyle(
-            color: Colors.white,
+            color: _textColor,
             fontSize: 18,
             fontWeight: FontWeight.bold,
-            fontFamily: "syne",
           ),
         ),
         centerTitle: true,
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(1.0),
+          child: Container(color: Colors.grey.shade200, height: 1.0),
+        ),
       ),
       body: SafeArea(
         child: SingleChildScrollView(
@@ -143,12 +157,20 @@ class _AddListingScreenState extends State<AddListingScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // 1. Image Upload Section
-              Text(
-                'Photos (${_selectedImages.length}/3)',
-                style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: Colors.white),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    'Photos',
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: _textColor),
+                  ),
+                  Text(
+                    '${_selectedImages.length}/3',
+                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: _subtitleColor),
+                  ),
+                ],
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: 16),
               
               SingleChildScrollView(
                 scrollDirection: Axis.horizontal,
@@ -164,6 +186,7 @@ class _AddListingScreenState extends State<AddListingScreen> {
                             height: 100,
                             decoration: BoxDecoration(
                               borderRadius: BorderRadius.circular(16),
+                              border: Border.all(color: Colors.grey.shade200),
                               image: DecorationImage(
                                 image: FileImage(File(_selectedImages[index].path)),
                                 fit: BoxFit.cover,
@@ -176,12 +199,15 @@ class _AddListingScreenState extends State<AddListingScreen> {
                             child: GestureDetector(
                               onTap: () => _removeImage(index),
                               child: Container(
-                                padding: const EdgeInsets.all(4),
-                                decoration: const BoxDecoration(
-                                  color: Color.fromARGB(255, 160, 8, 8),
+                                padding: const EdgeInsets.all(6),
+                                decoration: BoxDecoration(
+                                  color: Colors.white,
                                   shape: BoxShape.circle,
+                                  boxShadow: [
+                                    BoxShadow(color: Colors.black.withOpacity(0.1), blurRadius: 4),
+                                  ],
                                 ),
-                                child: const Icon(Icons.close, size: 14, color: Colors.white),
+                                child: const Icon(Icons.close, size: 14, color: Colors.redAccent),
                               ),
                             ),
                           ),
@@ -195,16 +221,15 @@ class _AddListingScreenState extends State<AddListingScreen> {
                           width: 100,
                           height: 100,
                           decoration: BoxDecoration(
-                            color: _inputBgColor,
+                            color: _inputFillColor,
                             borderRadius: BorderRadius.circular(16),
-                            border: Border.all(color: _primaryPurple.withOpacity(0.5), style: BorderStyle.solid),
                           ),
                           child: Column(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              Icon(Icons.add_a_photo_outlined, color: _primaryPurple, size: 28),
+                              Icon(Icons.add_photo_alternate_outlined, color: Colors.green[800], size: 32),
                               const SizedBox(height: 8),
-                              Text('Add', style: TextStyle(color: _textSecondary, fontSize: 12)),
+                              Text('Add', style: TextStyle(color: Colors.green[800], fontSize: 12, fontWeight: FontWeight.w600)),
                             ],
                           ),
                         ),
@@ -214,60 +239,62 @@ class _AddListingScreenState extends State<AddListingScreen> {
               ),
               const SizedBox(height: 32),
 
-              // 2. Title
               _buildLabel('Title'),
               const SizedBox(height: 8),
               TextField(
                 controller: _titleController,
-                style: const TextStyle(color: Colors.white),
+                style: TextStyle(color: _textColor),
                 decoration: _getSharedInputDecoration('e.g., iPhone 13 Pro Max', errorText: _titleError),
               ),
               const SizedBox(height: 20),
 
-              // 3. Category (UPDATED TO BE DYNAMIC)
               _buildLabel('Category'),
               const SizedBox(height: 8),
               _buildCategoryDropdown(),
               const SizedBox(height: 20),
 
-              // 4. Price
-              _buildLabel('Price (EGP)'),
+              _buildLabel('Price'),
               const SizedBox(height: 8),
               TextField(
                 controller: _priceController,
                 keyboardType: TextInputType.number,
-                style: const TextStyle(color: Colors.white),
-                decoration: _getSharedInputDecoration('e.g., 15000', errorText: _priceError),
+                style: TextStyle(color: _textColor),
+                decoration: _getSharedInputDecoration('e.g., 1500', errorText: _priceError),
               ),
               const SizedBox(height: 20),
 
-              // 5. Condition Toggle
               _buildLabel('Condition'),
               const SizedBox(height: 8),
               _buildConditionToggle(),
               const SizedBox(height: 20),
 
-              // 6. Description
               _buildLabel('Description (Optional)'),
               const SizedBox(height: 8),
               TextField(
                 controller: _descController,
                 maxLines: 4, 
-                style: const TextStyle(color: Colors.white),
+                style: TextStyle(color: _textColor),
                 decoration: _getSharedInputDecoration('Describe the item, condition, battery health, etc.'),
               ),
               const SizedBox(height: 40),
 
-              // 7. Post Button
               _buildPostButton(),
+              const SizedBox(height: 24),
+              
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.info_outline, color: _subtitleColor, size: 16),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      "Product will be reviewed by our team before being listed. A status email will be sent shortly.",
+                      style: TextStyle(color: _subtitleColor, fontSize: 12, height: 1.5),
+                    ),
+                  ),
+                ],
+              ),
               const SizedBox(height: 20),
-              const Center(
-                child: Text(
-                  "Product will be Reviewed by Our Team before being listed.\nStatus email will be sent shortly!",
-                  style: TextStyle(color: Colors.white, fontFamily: "syne", fontSize: 12),
-                  textAlign: TextAlign.center,
-                ),
-              )
             ],
           ),
         ),
@@ -275,22 +302,19 @@ class _AddListingScreenState extends State<AddListingScreen> {
     );
   }
 
-  // --- WIDGET BUILDERS ---
 
-  Widget _buildLabel(String text) {
-    return Text(
-      text,
-      style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: Colors.white),
-    );
-  }
 
-  // UPDATED: Dynamic Category Dropdown using StreamBuilder
+
   Widget _buildCategoryDropdown() {
     return StreamBuilder<QuerySnapshot>(
       stream: FirebaseFirestore.instance.collection('categories').orderBy('createdAt').snapshots(),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return const SizedBox(height: 56, child: Center(child: CircularProgressIndicator()));
+          return Container(
+            height: 56,
+            decoration: BoxDecoration(color: _inputFillColor, borderRadius: BorderRadius.circular(12)),
+            child: Center(child: CircularProgressIndicator(color: _primaryColor)),
+          );
         }
 
         List<String> dynamicCategories = [];
@@ -303,7 +327,6 @@ class _AddListingScreenState extends State<AddListingScreen> {
           }
         }
 
-        // Safety check to set a default value if one isn't selected yet
         if (dynamicCategories.isNotEmpty && (_selectedCategory == null || !dynamicCategories.contains(_selectedCategory))) {
           WidgetsBinding.instance.addPostFrameCallback((_) {
             if (mounted) setState(() => _selectedCategory = dynamicCategories.first);
@@ -311,10 +334,10 @@ class _AddListingScreenState extends State<AddListingScreen> {
         }
 
         return DropdownButtonFormField<String>(
-          value: _selectedCategory,
-          icon: const Icon(Icons.keyboard_arrow_down, color: Colors.grey),
-          dropdownColor: _inputBgColor,
-          style: const TextStyle(color: Colors.white),
+          initialValue: _selectedCategory,
+          icon: Icon(Icons.keyboard_arrow_down, color: _subtitleColor),
+          dropdownColor: Colors.white,
+          style: TextStyle(color: _textColor, fontSize: 16),
           decoration: _getSharedInputDecoration('Select a category', errorText: _categoryError),
           items: dynamicCategories.map((String category) {
             return DropdownMenuItem<String>(value: category, child: Text(category));
@@ -322,7 +345,7 @@ class _AddListingScreenState extends State<AddListingScreen> {
           onChanged: (String? newValue) {
             setState(() {
               _selectedCategory = newValue;
-              _categoryError = null; // Clear any error once selected
+              _categoryError = null; 
             });
           },
         );
@@ -332,12 +355,8 @@ class _AddListingScreenState extends State<AddListingScreen> {
 
   Widget _buildConditionToggle() {
     return Container(
-      height: 48,
-      decoration: BoxDecoration(
-        color: _inputBgColor,
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: Colors.white.withOpacity(0.05)),
-      ),
+      height: 52,
+      decoration: BoxDecoration(color: _inputFillColor, borderRadius: BorderRadius.circular(12)),
       child: Row(
         children: [
           Expanded(
@@ -345,17 +364,13 @@ class _AddListingScreenState extends State<AddListingScreen> {
               onTap: () => setState(() => _isNew = true),
               child: Container(
                 decoration: BoxDecoration(
-                  color: _isNew ? _primaryPurple : Colors.transparent,
-                  borderRadius: BorderRadius.circular(24),
+                  color: _isNew ? Colors.white : Colors.transparent,
+                  borderRadius: BorderRadius.circular(10),
+                  boxShadow: _isNew ? [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 4)] : [],
                 ),
+                margin: const EdgeInsets.all(4),
                 child: Center(
-                  child: Text(
-                    'Brand New',
-                    style: TextStyle(
-                      color: _isNew ? Colors.white : _textSecondary,
-                      fontWeight: _isNew ? FontWeight.bold : FontWeight.normal,
-                    ),
-                  ),
+                  child: Text('Brand New', style: TextStyle(color: _isNew ? Colors.green[800] : _subtitleColor, fontWeight: FontWeight.bold)),
                 ),
               ),
             ),
@@ -365,17 +380,13 @@ class _AddListingScreenState extends State<AddListingScreen> {
               onTap: () => setState(() => _isNew = false),
               child: Container(
                 decoration: BoxDecoration(
-                  color: !_isNew ? _primaryPurple : Colors.transparent,
-                  borderRadius: BorderRadius.circular(24),
+                  color: !_isNew ? Colors.white : Colors.transparent,
+                  borderRadius: BorderRadius.circular(10),
+                  boxShadow: !_isNew ? [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 4)] : [],
                 ),
+                margin: const EdgeInsets.all(4),
                 child: Center(
-                  child: Text(
-                    'Used',
-                    style: TextStyle(
-                      color: !_isNew ? Colors.white : _textSecondary,
-                      fontWeight: !_isNew ? FontWeight.bold : FontWeight.normal,
-                    ),
-                  ),
+                  child: Text('Used', style: TextStyle(color: !_isNew ? Colors.green[800] : _subtitleColor, fontWeight: FontWeight.bold)),
                 ),
               ),
             ),
@@ -386,106 +397,108 @@ class _AddListingScreenState extends State<AddListingScreen> {
   }
 
   Widget _buildPostButton() {
-    return Center(
-      child: Container(
-        width: 200,
-        height: 50,
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(25),
-          color: _primaryPurple,
-          boxShadow: [
-            BoxShadow(color: _primaryPurple.withOpacity(0.4), blurRadius: 15, offset: const Offset(0, 5)),
-          ],
-        ),
-        child: ElevatedButton(
-          onPressed: _isLoading ? null : () async {
-            setState(() {
-              _titleError = null;
-              _priceError = null;
-              _categoryError = null;
-            });
+    return SizedBox(
+      width: double.infinity,
+      height: 56,
+      child: ElevatedButton(
+        onPressed: _isLoading ? null : () async {
+          setState(() {
+            _titleError = null;
+            _priceError = null;
+            _categoryError = null;
+          });
 
-            bool isValid = true;
+          bool isValid = true;
 
-            // Validation
-            if (_titleController.text.trim().isEmpty) {
-              _titleError = 'Title is required';
-              isValid = false;
+          if (_titleController.text.trim().isEmpty) {
+            _titleError = 'Title is required';
+            isValid = false;
+          }
+          if (_selectedCategory == null || _selectedCategory!.isEmpty) {
+            _categoryError = 'Category is required';
+            isValid = false;
+          }
+          if (_priceController.text.trim().isEmpty) {
+            _priceError = 'Price is required';
+            isValid = false;
+          }
+          if (_selectedImages.isEmpty) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Please add at least one photo')),
+            );
+            isValid = false;
+          }
+
+          if (!isValid) return;
+
+          setState(() => _isLoading = true);
+
+          try {
+            final String uid = FirebaseAuth.instance.currentUser!.uid;
+            
+            List<String> base64Images = [];
+            for (int i = 0; i < _selectedImages.length; i++) {
+              final bytes = await File(_selectedImages[i].path).readAsBytes();
+              final String base64String = base64Encode(bytes);
+              base64Images.add("data:image/jpeg;base64,$base64String");
             }
-            if (_selectedCategory == null || _selectedCategory!.isEmpty) {
-              _categoryError = 'Category is required';
-              isValid = false;
-            }
-            if (_priceController.text.trim().isEmpty) {
-              _priceError = 'Price is required';
-              isValid = false;
-            }
-            if (_selectedImages.isEmpty) {
+
+            final newListingData = {
+              "title": _titleController.text.trim(),
+              "category": _selectedCategory ?? 'Other',
+              "price": int.tryParse(_priceController.text.trim()) ?? 0,
+              "isNew": _isNew,
+              "description": _descController.text.trim(),
+              "images": base64Images, 
+              "sellerId": uid, 
+              "status": "pending", 
+              "createdAt": FieldValue.serverTimestamp(),
+            };
+            
+            await FirebaseFirestore.instance.collection('listings').add(newListingData);
+
+            if (mounted) {
+              setState(() => _isLoading = false);
+              Navigator.pop(context); 
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Please add at least one photo')),
+                const SnackBar(content: Text('Listing sent for review. Stay Tuned!')),
               );
-              isValid = false;
             }
-
-            if (!isValid) return;
-
-            setState(() => _isLoading = true);
-
-            try {
-              final String uid = FirebaseAuth.instance.currentUser!.uid;
-              
-              // 1. Convert Images to Base64 Text
-              List<String> base64Images = [];
-              for (int i = 0; i < _selectedImages.length; i++) {
-                final bytes = await File(_selectedImages[i].path).readAsBytes();
-                final String base64String = base64Encode(bytes);
-                base64Images.add("data:image/jpeg;base64,$base64String");
-              }
-
-              final newListingData = {
-                "title": _titleController.text.trim(),
-                "category": _selectedCategory ?? 'Other', // Used our new state variable
-                "price": int.tryParse(_priceController.text.trim()) ?? 0,
-                "isNew": _isNew,
-                "description": _descController.text.trim(),
-                "images": base64Images, 
-                "sellerId": uid, 
-                // CRITICAL FIX: Save as pending so it hits the Admin Queue!
-                "status": "pending", 
-                "createdAt": FieldValue.serverTimestamp(),
-              };
-              
-              await FirebaseFirestore.instance
-                  .collection('listings')
-                  .add(newListingData);
-
-              if (mounted) {
-                setState(() => _isLoading = false);
-                Navigator.pop(context); 
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Listing sent for review. Stay Tuned!')),
-                );
-              }
-            } catch (e) {
-              if (mounted) {
-                setState(() => _isLoading = false);
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text('Failed to post: $e')),
-                );
-              }
+          } catch (e) {
+            if (mounted) {
+              setState(() => _isLoading = false);
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text('Failed to post: $e')),
+              );
             }
-          },
-          style: ElevatedButton.styleFrom(
-            backgroundColor: Colors.transparent,
-            shadowColor: Colors.transparent,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(25)),
-          ),
-          child: _isLoading
-              ? const SizedBox(
-                  width: 24, height: 24,
-                  child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2.5),
-                )
-              : const Text('Post Listing', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)),
+          }
+        },
+        style: ElevatedButton.styleFrom(
+          backgroundColor: _primaryColor,
+          elevation: 0,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        ),
+        child: _isLoading
+            ? const SizedBox(
+                width: 24, height: 24,
+                child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2.5),
+              )
+            : Text('Post Listing', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.green[900])),
+      ),
+    );
+  }
+
+
+  Widget _buildLabel(String text) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8.0, left: 4.0),
+      child: Text(
+        text,
+        style: TextStyle(
+          fontSize: 13, 
+          fontWeight: FontWeight.w700, 
+          color: Colors.grey.shade800, 
+          letterSpacing: 0.3,
         ),
       ),
     );
@@ -495,25 +508,29 @@ class _AddListingScreenState extends State<AddListingScreen> {
     return InputDecoration(
       hintText: hint,
       errorText: errorText,
-      hintStyle: TextStyle(color: _textSecondary.withOpacity(0.6), fontSize: 14),
+      hintStyle: TextStyle(color: Colors.grey.shade400, fontSize: 14, fontWeight: FontWeight.w400),
       filled: true,
-      fillColor: _inputBgColor,
-      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+      fillColor: Colors.white,
+      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 18), 
+      
       enabledBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(20),
-        borderSide: BorderSide(color: Colors.white.withOpacity(0.05)),
+        borderRadius: BorderRadius.circular(12),
+        borderSide: BorderSide(color: Colors.grey.shade200, width: 1.5), 
       ),
+      
       focusedBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(20),
-        borderSide: BorderSide(color: _primaryPurple.withOpacity(0.5)),
+        borderRadius: BorderRadius.circular(12),
+        borderSide: BorderSide(color: Colors.green.shade700, width: 2.0),
       ),
+      
       errorBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(20),
-        borderSide: const BorderSide(color: Colors.redAccent),
+        borderRadius: BorderRadius.circular(12),
+        borderSide: const BorderSide(color: Colors.redAccent, width: 1.5),
       ),
+      
       focusedErrorBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(20),
-        borderSide: const BorderSide(color: Colors.redAccent, width: 2),
+        borderRadius: BorderRadius.circular(12),
+        borderSide: const BorderSide(color: Colors.redAccent, width: 2.0),
       ),
     );
   }

@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:yalla_safqa/verifyemail.dart';
-
-
+import 'package:FoundIT/verifyemail.dart';
 
 class SignupScreen extends StatefulWidget {
   const SignupScreen({super.key});
@@ -13,288 +11,194 @@ class SignupScreen extends StatefulWidget {
 }
 
 class _SignupScreenState extends State<SignupScreen> {
-  // 1. ALL CONTROLLERS
-  final TextEditingController _firstNameController = TextEditingController();
-  final TextEditingController _lastNameController = TextEditingController();
-  final TextEditingController _phoneController = TextEditingController();
-  final TextEditingController _facultyController = TextEditingController();
-  final TextEditingController _genderController = TextEditingController(
-    text: "Male",
-  );
+  final TextEditingController _nameController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _phoneController = TextEditingController();
+  final TextEditingController _genderController = TextEditingController(text: "Male");
   final TextEditingController _passwordController = TextEditingController();
-  final TextEditingController _confirmPasswordController =
-      TextEditingController();
+  final TextEditingController _confirmPasswordController = TextEditingController();
 
   bool _isPasswordObscured = true;
   bool _isConfirmPasswordObscured = true;
-
   bool _isLoading = false;
-  
+  bool _agreedToTerms = false;
+  String _selectedCountryCode = '+20'; 
 
-  // 2. ERROR VARIABLES FOR ALL FIELDS
-  String? _firstNameError;
-  String? _lastNameError;
-  String? _phoneError;
-  String? _facultyError;
+  bool _hasMinLength = false;
+  bool _hasNumber = false;
+  bool _hasUpperAndLower = false;
+
+  String? _nameError;
   String? _emailError;
+  String? _phoneError;
   String? _passwordError;
 
-  // Colors
-  final Color _bgColor = const Color.fromARGB(255, 38, 2, 58);
-  final Color _inputBgColor = const Color(0xFF1B1B28);
-  final Color _primaryPurple = const Color(0xFF6E56FF);
-  final Color _textSecondary = const Color.fromARGB(255, 255, 255, 255);
+  final Color _primaryColor = const Color(0xFFB5E575);
+  final Color _textColor = const Color(0xFF1E1E1E);
+  final Color _subtitleColor = const Color(0xFF8E8E8E);
+  final Color _inputFillColor = const Color(0xFFF5F5F5);
 
-  final List<String> _faculties = [
-    'Computer Science',
-    'Business',
-    'Art and Design',
-    'Engineering',
-  ];
+  final List<String> _countryCodes = ['+20', '+1', '+44', '+971', '+966'];
 
-  // 3. MEMORY MANAGEMENT
+  @override
+  void initState() {
+    super.initState();
+    _passwordController.addListener(_updatePasswordChecklist);
+  }
+
+  void _updatePasswordChecklist() {
+    final password = _passwordController.text;
+    setState(() {
+      _hasMinLength = password.length >= 8;
+      _hasNumber = RegExp(r'[0-9]').hasMatch(password);
+      _hasUpperAndLower = RegExp(r'[A-Z]').hasMatch(password) && RegExp(r'[a-z]').hasMatch(password);
+    });
+  }
+
   @override
   void dispose() {
-    _firstNameController.dispose();
-    _lastNameController.dispose();
-    _phoneController.dispose();
-    _facultyController.dispose();
-    _genderController.dispose();
+    _nameController.dispose();
     _emailController.dispose();
+    _phoneController.dispose();
+    _genderController.dispose();
     _passwordController.dispose();
     _confirmPasswordController.dispose();
     super.dispose();
   }
-  
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: _bgColor,
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        leading: IconButton(
-          icon: Icon(Icons.arrow_back, color: _primaryPurple),
-          onPressed: () => Navigator.pop(context),
-        ),
-        title: const Text(
-          'Create Account',
-          style: TextStyle(
-            color: Colors.white,
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
-            fontFamily: "syne",
-          ),
-        ),
-        centerTitle: true,
-      ),
-
+      backgroundColor: Colors.white,
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 12.0),
+          padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 20.0),
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              _buildHeaderBanner(),
+              const SizedBox(height: 20),
+
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.storefront_outlined, color: Colors.green[800], size: 32),
+                  const SizedBox(width: 8),
+                  Text(
+                    'FoundIt',
+                    style: TextStyle(
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.green[900],
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 40),
+
+              Text(
+                'Welcome to FoundIt',
+                style: TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                  color: _textColor,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'Sign up or login below to manage your\nproject, task, and productivity',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 14,
+                  color: _subtitleColor,
+                  height: 1.5,
+                ),
+              ),
+              const SizedBox(height: 30),
+
+              Row(
+                children: [
+                  Expanded(child: _buildTab(title: 'Login', isActive: false)),
+                  Expanded(child: _buildTab(title: 'Sign Up', isActive: true)),
+                ],
+              ),
+              const SizedBox(height: 30),
+
+              _buildTextField(
+                controller: _nameController,
+                icon: Icons.person_outline,
+                hint: 'Your full name',
+                errorText: _nameError,
+              ),
+              const SizedBox(height: 16),
+
+              _buildTextField(
+                controller: _emailController,
+                icon: Icons.email_outlined,
+                hint: 'Enter your email',
+                errorText: _emailError,
+                keyboardType: TextInputType.emailAddress,
+              ),
+              const SizedBox(height: 16),
+
+              _buildPhoneField(),
+              const SizedBox(height: 16),
+
+              _buildGenderToggle(),
+              const SizedBox(height: 16),
+
+              _buildTextField(
+                controller: _passwordController,
+                icon: Icons.lock_outline,
+                hint: 'Enter your password',
+                errorText: _passwordError,
+                obscureText: _isPasswordObscured,
+                suffixIcon: _buildVisibilityToggle(
+                  isObscured: _isPasswordObscured,
+                  onPressed: () => setState(() => _isPasswordObscured = !_isPasswordObscured),
+                ),
+              ),
+              const SizedBox(height: 16),
+
+              _buildTextField(
+                controller: _confirmPasswordController,
+                icon: Icons.lock_outline,
+                hint: 'Confirm your password',
+                obscureText: _isConfirmPasswordObscured,
+                suffixIcon: _buildVisibilityToggle(
+                  isObscured: _isConfirmPasswordObscured,
+                  onPressed: () => setState(() => _isConfirmPasswordObscured = !_isConfirmPasswordObscured),
+                ),
+              ),
+              const SizedBox(height: 16),
+
+              _buildPasswordChecklist(),
               const SizedBox(height: 24),
 
               Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  SizedBox(
+                    width: 24,
+                    height: 24,
+                    child: Checkbox(
+                      value: _agreedToTerms,
+                      activeColor: Colors.green[800],
+                      onChanged: (value) => setState(() => _agreedToTerms = value ?? false),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
                   Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        _buildLabel('First Name'),
-                        const SizedBox(height: 8),
-                        _buildTextField(
-                          hint: 'John',
-                          controller: _firstNameController,
-                          errorText: _firstNameError,
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        _buildLabel('Last Name'),
-                        const SizedBox(height: 8),
-                        _buildTextField(
-                          hint: 'Doe',
-                          controller: _lastNameController,
-                          errorText: _lastNameError,
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 20),
-
-              // University Email
-              _buildLabel('University Email'),
-              const SizedBox(height: 8),
-              TextField(
-                controller: _emailController,
-                style: const TextStyle(color: Colors.white),
-                decoration: _getSharedInputDecoration(
-                  'yourid@students.eui.edu.eg',
-                  errorText: _emailError,
-                ),
-              ),
-              const SizedBox(height: 6),
-              Text(
-                'Requires verification via .edu domain',
-                style: TextStyle(
-                  color: _primaryPurple.withOpacity(0.8),
-                  fontSize: 11,
-                  fontStyle: FontStyle.italic,
-                ),
-              ),
-              const SizedBox(height: 20),
-
-              // Phone Number
-              _buildLabel('Phone Number'),
-              const SizedBox(height: 8),
-              _buildTextField(
-                hint: '00000000000',
-                controller: _phoneController,
-                errorText: _phoneError,
-              ),
-              const SizedBox(height: 20),
-
-              // Faculty Dropdown
-              _buildLabel('Faculty'),
-              const SizedBox(height: 8),
-              _buildDropdown(),
-              const SizedBox(height: 20),
-
-              // Gender Toggle
-              _buildLabel('Gender'),
-              const SizedBox(height: 8),
-              _buildGenderToggle(),
-              const SizedBox(height: 20),
-
-              // Password
-              _buildLabel('Password'),
-              const SizedBox(height: 8),
-              TextField(
-                controller: _passwordController,
-                obscureText: _isPasswordObscured,
-                style: const TextStyle(color: Colors.white),
-                decoration: _getSharedInputDecoration('••••••••').copyWith(
-                  suffixIcon: IconButton(
-                    icon: Icon(
-                      _isPasswordObscured
-                          ? Icons.visibility_off_outlined
-                          : Icons.visibility_outlined,
-                      color: _textSecondary,
-                      size: 20,
-                    ),
-                    onPressed: () {
-                      setState(() {
-                        _isPasswordObscured = !_isPasswordObscured;
-                      });
-                    },
-                  ),
-                ),
-              ),
-              const SizedBox(height: 20),
-
-              // Confirm Password
-              _buildLabel('Confirm Password'),
-              const SizedBox(height: 8),
-              TextField(
-                controller: _confirmPasswordController,
-                obscureText: _isConfirmPasswordObscured,
-                style: const TextStyle(color: Colors.white),
-                decoration:
-                    _getSharedInputDecoration(
-                      '••••••••',
-                      errorText: _passwordError,
-                    ).copyWith(
-                      suffixIcon: IconButton(
-                        icon: Icon(
-                          _isConfirmPasswordObscured
-                              ? Icons.visibility_off_outlined
-                              : Icons.visibility_outlined,
-                          color: _textSecondary,
-                          size: 20,
-                        ),
-                        onPressed: () {
-                          setState(() {
-                            _isConfirmPasswordObscured =
-                                !_isConfirmPasswordObscured;
-                          });
-                        },
-                      ),
-                    ),
-              ),
-              const SizedBox(height: 32),
-
-              // Continue Button
-              _buildContinueButton(),
-              const SizedBox(height: 16),
-
-              // Verified Badge
-              Center(
-                child: Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 8,
-                  ),
-                  decoration: BoxDecoration(
-                    color: _inputBgColor,
-                    borderRadius: BorderRadius.circular(20),
-                    border: Border.all(color: _primaryPurple.withOpacity(0.3)),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(Icons.lock_outline, color: _primaryPurple, size: 14),
-                      const SizedBox(width: 6),
-                      Text(
-                        'VERIFIED STUDENTS ONLY',
-                        style: TextStyle(
-                          fontSize: 10,
-                          fontWeight: FontWeight.bold,
-                          color: _primaryPurple,
-                          letterSpacing: 0.5,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-              const SizedBox(height: 32),
-
-              // Footer Login Link
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(
-                    "Already have an account? ",
-                    style: TextStyle(color: _textSecondary, fontSize: 13),
-                  ),
-                  GestureDetector(
-                    onTap: () => Navigator.pop(context),
                     child: Text(
-                      "Login",
-                      style: TextStyle(
-                        color: _primaryPurple,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 13,
-                      ),
+                      'By agreeing to the terms and conditions, you are entering into a binding contract with FoundIt.',
+                      style: TextStyle(fontSize: 12, color: _subtitleColor, height: 1.5),
                     ),
                   ),
                 ],
               ),
-              const SizedBox(height: 24),
+              const SizedBox(height: 32),
+
+              _buildSubmitButton(),
+              const SizedBox(height: 32),
             ],
           ),
         ),
@@ -302,114 +206,141 @@ class _SignupScreenState extends State<SignupScreen> {
     );
   }
 
-  // --- WIDGET BUILDERS ---
 
-  Widget _buildLabel(String text) {
-    return Text(
-      text,
-      style: const TextStyle(
-        fontSize: 13,
-        fontWeight: FontWeight.w600,
-        color: Colors.white,
+  Widget _buildTab({required String title, required bool isActive}) {
+    return GestureDetector(
+      onTap: () {
+        if (title == 'Login') {
+          Navigator.pop(context); 
+        }
+      },
+      child: Column(
+        children: [
+          Text(
+            title,
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: isActive ? FontWeight.bold : FontWeight.w500,
+              color: isActive ? Colors.green[800] : _subtitleColor,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Container(height: 2, color: isActive ? Colors.green[800] : Colors.transparent),
+          Container(height: 1, color: Colors.grey[300]),
+        ],
       ),
     );
   }
 
   Widget _buildTextField({
-    required String hint,
     required TextEditingController controller,
+    required IconData icon,
+    required String hint,
     String? errorText,
+    bool obscureText = false,
+    Widget? suffixIcon,
+    TextInputType keyboardType = TextInputType.text,
   }) {
     return TextField(
       controller: controller,
-      style: const TextStyle(color: Colors.white),
-      decoration: _getSharedInputDecoration(hint, errorText: errorText),
-    );
-  }
-
-  Widget _buildDropdown() {
-    return DropdownButtonFormField<String>(
-      // Connect to the controller text
-      value: _facultyController.text.isEmpty ? null : _facultyController.text,
-      icon: const Icon(Icons.keyboard_arrow_down, color: Colors.grey),
-      dropdownColor: _inputBgColor,
-      style: const TextStyle(color: Colors.white),
-      decoration: _getSharedInputDecoration(
-        'Select your faculty',
-        errorText: _facultyError,
+      obscureText: obscureText,
+      keyboardType: keyboardType,
+      style: TextStyle(color: _textColor),
+      decoration: InputDecoration(
+        hintText: hint,
+        hintStyle: TextStyle(color: _subtitleColor, fontSize: 14),
+        errorText: errorText,
+        prefixIcon: Icon(icon, color: _subtitleColor),
+        suffixIcon: suffixIcon,
+        filled: true,
+        fillColor: _inputFillColor,
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+        contentPadding: const EdgeInsets.symmetric(vertical: 18),
       ),
-      items: _faculties.map((String faculty) {
-        return DropdownMenuItem<String>(value: faculty, child: Text(faculty));
-      }).toList(),
-      onChanged: (String? newValue) {
-        setState(() {
-          _facultyController.text = newValue ?? '';
-        });
-      },
     );
   }
 
-Widget _buildGenderToggle() {
-    // Read state directly from the controller
-    bool isMaleSelected = _genderController.text == "Male";
-
+  Widget _buildPhoneField() {
     return Container(
-      height: 38,
       decoration: BoxDecoration(
-        color: _inputBgColor,
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: Colors.white.withOpacity(0.05)),
+        color: _inputFillColor,
+        borderRadius: BorderRadius.circular(12),
+        border: _phoneError != null ? Border.all(color: Colors.redAccent) : null,
       ),
+      child: Row(
+        children: [
+          const SizedBox(width: 12),
+          Icon(Icons.phone_outlined, color: _subtitleColor),
+          const SizedBox(width: 8),
+          DropdownButtonHideUnderline(
+            child: DropdownButton<String>(
+              value: _selectedCountryCode,
+              icon: Icon(Icons.arrow_drop_down, color: _subtitleColor),
+              style: TextStyle(color: _textColor, fontSize: 14, fontWeight: FontWeight.bold),
+              onChanged: (String? newValue) {
+                setState(() {
+                  _selectedCountryCode = newValue!;
+                });
+              },
+              items: _countryCodes.map<DropdownMenuItem<String>>((String value) {
+                return DropdownMenuItem<String>(value: value, child: Text(value));
+              }).toList(),
+            ),
+          ),
+          Container(width: 1, height: 24, color: Colors.grey[300], margin: const EdgeInsets.symmetric(horizontal: 8)),
+          Expanded(
+            child: TextField(
+              controller: _phoneController,
+              keyboardType: TextInputType.phone,
+              style: TextStyle(color: _textColor),
+              decoration: InputDecoration(
+                hintText: 'Phone number',
+                hintStyle: TextStyle(color: _subtitleColor, fontSize: 14),
+                border: InputBorder.none,
+                contentPadding: const EdgeInsets.symmetric(vertical: 18),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildGenderToggle() {
+    bool isMaleSelected = _genderController.text == "Male";
+    return Container(
+      height: 52,
+      decoration: BoxDecoration(color: _inputFillColor, borderRadius: BorderRadius.circular(12)),
       child: Row(
         children: [
           Expanded(
             child: GestureDetector(
-              onTap: () {
-                setState(() {
-                  _genderController.text = "Male";
-                });
-              },
+              onTap: () => setState(() => _genderController.text = "Male"),
               child: Container(
                 decoration: BoxDecoration(
-                  color: isMaleSelected ? _primaryPurple : Colors.transparent,
-                  borderRadius: BorderRadius.circular(24),
+                  color: isMaleSelected ? Colors.white : Colors.transparent,
+                  borderRadius: BorderRadius.circular(10),
+                  boxShadow: isMaleSelected ? [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 4)] : [],
                 ),
+                margin: const EdgeInsets.all(4),
                 child: Center(
-                  child: Text(
-                    'Male',
-                    style: TextStyle(
-                      color: isMaleSelected ? Colors.white : _textSecondary,
-                      fontWeight: isMaleSelected
-                          ? FontWeight.bold
-                          : FontWeight.normal,
-                    ),
-                  ),
+                  child: Text('Male', style: TextStyle(color: isMaleSelected ? Colors.green[800] : _subtitleColor, fontWeight: FontWeight.bold)),
                 ),
               ),
             ),
           ),
           Expanded(
             child: GestureDetector(
-              onTap: () {
-                setState(() {
-                  _genderController.text = "Female";
-                });
-              },
+              onTap: () => setState(() => _genderController.text = "Female"),
               child: Container(
                 decoration: BoxDecoration(
-                  color: !isMaleSelected ? _primaryPurple : Colors.transparent,
-                  borderRadius: BorderRadius.circular(24),
+                  color: !isMaleSelected ? Colors.white : Colors.transparent,
+                  borderRadius: BorderRadius.circular(10),
+                  boxShadow: !isMaleSelected ? [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 4)] : [],
                 ),
+                margin: const EdgeInsets.all(4),
                 child: Center(
-                  child: Text(
-                    'Female',
-                    style: TextStyle(
-                      color: !isMaleSelected ? Colors.white : _textSecondary,
-                      fontWeight: !isMaleSelected
-                          ? FontWeight.bold
-                          : FontWeight.normal,
-                    ),
-                  ),
+                  child: Text('Female', style: TextStyle(color: !isMaleSelected ? Colors.green[800] : _subtitleColor, fontWeight: FontWeight.bold)),
                 ),
               ),
             ),
@@ -419,284 +350,133 @@ Widget _buildGenderToggle() {
     );
   }
 
-Widget _buildContinueButton() {
-    return Center(
-      child: Container(
-        width: 200,
-        height: 50,
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(25),
-          gradient: const LinearGradient(
-            colors: [Color(0xFF6E56FF), Color.fromARGB(255, 161, 2, 179)],
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: _primaryPurple.withOpacity(0.4),
-              blurRadius: 15,
-              offset: const Offset(0, 5),
-            ),
-          ],
+  Widget _buildVisibilityToggle({required bool isObscured, required VoidCallback onPressed}) {
+    return IconButton(
+      icon: Icon(isObscured ? Icons.visibility_off_outlined : Icons.visibility_outlined, color: _subtitleColor, size: 20),
+      onPressed: onPressed,
+    );
+  }
+
+  Widget _buildPasswordChecklist() {
+    return Column(
+      children: [
+        _buildChecklistItem('At least 8 characters', _hasMinLength),
+        const SizedBox(height: 6),
+        _buildChecklistItem('At least 1 number', _hasNumber),
+        const SizedBox(height: 6),
+        _buildChecklistItem('Both upper and lower case letters', _hasUpperAndLower),
+      ],
+    );
+  }
+
+  Widget _buildChecklistItem(String text, bool isMet) {
+    return Row(
+      children: [
+        Icon(Icons.check_circle, color: isMet ? Colors.green[600] : Colors.grey[300], size: 16),
+        const SizedBox(width: 8),
+        Text(text, style: TextStyle(color: isMet ? Colors.green[800] : _subtitleColor, fontSize: 12)),
+      ],
+    );
+  }
+
+  Widget _buildSubmitButton() {
+    return SizedBox(
+      width: double.infinity,
+      height: 56,
+      child: ElevatedButton(
+        onPressed: _isLoading ? null : _handleSignUp,
+        style: ElevatedButton.styleFrom(
+          backgroundColor: _primaryColor,
+          elevation: 0,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         ),
-        child: ElevatedButton(
-          // STEP 2: Added 'async' here
-          onPressed: _isLoading ? null : () async { 
-            setState(() {
-              _firstNameError = null;
-              _lastNameError = null;
-              _phoneError = null;
-              _facultyError = null;
-              _emailError = null;
-              _passwordError = null;
-            });
-
-            bool isValid = true;
-
-            // --- Your existing validation checks ---
-            if (_firstNameController.text.trim().isEmpty) {
-              _firstNameError = 'Required';
-              isValid = false;
-            }
-            if (_lastNameController.text.trim().isEmpty) {
-              _lastNameError = 'Required';
-              isValid = false;
-            }
-            if (_phoneController.text.trim().isEmpty ||
-                !RegExp(r'^(010|011)\d{8}$').hasMatch(_phoneController.text.trim())) {
-              _phoneError = 'Enter valid Egyptian number';
-              isValid = false;
-            }
-            if (_facultyController.text.isEmpty) {
-              _facultyError = 'Required';
-              isValid = false;
-            }
-
-            String email = _emailController.text.trim();
-            // if (email.isEmpty || !email.endsWith('@students.eui.edu.eg')) {
-            //   _emailError = 'Must use a valid @students.eui.edu.eg email';
-            //   isValid = false;
-            // }
-
-            // --- Replace the old Validate Passwords section with this ---
-              
-              String password = _passwordController.text;
-
-              if (password.isEmpty) {
-                _passwordError = 'Password cannot be empty';
-                isValid = false;
-              } else if (password.length < 8) {
-                _passwordError = 'Must be at least 8 characters long';
-                isValid = false;
-              } else if (!RegExp(r'[A-Z]').hasMatch(password)) {
-                _passwordError = 'Must contain at least one uppercase letter';
-                isValid = false;
-              } else if (!RegExp(r'[a-z]').hasMatch(password)) {
-                _passwordError = 'Must contain at least one lowercase letter';
-                isValid = false;
-              } else if (!RegExp(r'[0-9]').hasMatch(password)) {
-                _passwordError = 'Must contain at least one number';
-                isValid = false;
-              } else if (!RegExp(r'[!@#\$&*~%^()-+]').hasMatch(password)) {
-                _passwordError = 'Must contain a special character (e.g., @, #, !)';
-                isValid = false;
-              } else if (password != _confirmPasswordController.text) {
-                _passwordError = 'Passwords do not match';
-                isValid = false;
-              }
-              
-              // ------------------------------------------------------------
-
-            if (!isValid) {
-              setState(() {}); // Trigger rebuild to show red borders
-              return; // Stop execution if validation failed
-            }
-
-            // --- FIREBASE SIGN UP LOGIC ---
-            
-            // Start the loading spinner
-            setState(() {
-              _isLoading = true; 
-            });
-
-            try {
-              // STEP 3: Create the user in Firebase Auth
-              UserCredential userCredential = await FirebaseAuth.instance
-                  .createUserWithEmailAndPassword(
-                email: email,
-                password: _passwordController.text,
-              );
-              await userCredential.user!.sendEmailVerification();
-
-              // STEP 4: Save extra data to Firestore
-              final userData = {
-                "firstName": _firstNameController.text.trim(),
-                "lastName": _lastNameController.text.trim(),
-                "email": email,
-                "password":password,
-                "phone": _phoneController.text.trim(),
-                "faculty": _facultyController.text,
-                "gender": _genderController.text,
-                "createdAt": FieldValue.serverTimestamp(), //track when they joined
-              };
-
-              // Use the unique UID provided by Auth as the document ID in Firestore
-              await FirebaseFirestore.instance
-                  .collection('Users')
-                  .doc(userCredential.user!.uid)
-                  .set(userData);
-
-              // SUCCESS! Navigate to the Verification Screen
-              if (mounted) {
-                Navigator.pushReplacement(
-                  context,
-                  MaterialPageRoute(builder: (context) => const VerifyEmailScreen()),
-                );
-              }
-
-            } on FirebaseAuthException catch (e) {
-              // STEP 5: Handle Firebase-specific errors
-              setState(() {
-                if (e.code == 'weak-password') {
-                  _passwordError = 'The password provided is too weak.';
-                } else if (e.code == 'email-already-in-use') {
-                  _emailError = 'An account already exists for that email.';
-                } else {
-                  _emailError = e.message; // Catch-all for other errors
-                }
-              });
-            } catch (e) {
-              setState(() {
-                _emailError = 'An error occurred. Please try again.';
-              });
-            } finally {
-              if (mounted) {
-                setState(() {
-                  _isLoading = false;
-                });
-              }
-            }
-          },
-          style: ElevatedButton.styleFrom(
-            backgroundColor: Colors.transparent,
-            shadowColor: Colors.transparent,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(25),
-            ),
-          ),
-          // Swap the text/icon for a loading spinner if _isLoading is true
-          child: _isLoading
-              ? const SizedBox(
-                  width: 24,
-                  height: 24,
-                  child: CircularProgressIndicator(
-                    color: Colors.white,
-                    strokeWidth: 2.5,
-                  ),
-                )
-              : const Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(
-                      'Continue',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                      ),
-                    ),
-                    SizedBox(width: 8),
-                    Icon(Icons.arrow_forward, color: Colors.white, size: 20),
-                  ],
-                ),
-        ),
+        child: _isLoading
+            ? const SizedBox(width: 24, height: 24, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2.5))
+            : Text('Sign Up', style: TextStyle(color: Colors.green[900], fontSize: 16, fontWeight: FontWeight.bold)),
       ),
     );
   }
 
-Widget _buildHeaderBanner() {
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(24),
-      child: Container(
-        width: double.infinity,
-        height: 140,
-        decoration: const BoxDecoration(color: Colors.black),
-        child: Stack(
-          fit: StackFit.expand,
-          children: [
-            Image.asset('assets/img/stu.png', fit: BoxFit.cover),
-            Container(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [
-                    Colors.black.withOpacity(0.3),
-                    Colors.black.withOpacity(0.8),
-                  ],
-                ),
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: [
-                  const Text(
-                    'Yallasafqa',
-                    style: TextStyle(
-                      fontSize: 28,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                      fontFamily: "syne",
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    'FOR STUDENTS, BY STUDENTS',
-                    style: TextStyle(
-                      fontSize: 11,
-                      fontWeight: FontWeight.bold,
-                      color: _primaryPurple,
-                      letterSpacing: 1.2,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
 
-  // --- STYLING HELPERS ---
+  Future<void> _handleSignUp() async {
+    setState(() {
+      _nameError = null;
+      _emailError = null;
+      _phoneError = null;
+      _passwordError = null;
+    });
 
-InputDecoration _getSharedInputDecoration(String hint, {String? errorText}) {
-    return InputDecoration(
-      hintText: hint,
-      errorText: errorText,
-      hintStyle: TextStyle(
-        color: _textSecondary.withOpacity(0.6),
-        fontSize: 14,
-      ),
-      filled: true,
-      fillColor: _inputBgColor,
-      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-      enabledBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(20),
-        borderSide: BorderSide(color: Colors.white.withOpacity(0.05)),
-      ),
-      focusedBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(20),
-        borderSide: BorderSide(color: _primaryPurple.withOpacity(0.5)),
-      ),
-      errorBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(20),
-        borderSide: const BorderSide(color: Colors.redAccent),
-      ),
-      focusedErrorBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(20),
-        borderSide: const BorderSide(color: Colors.redAccent, width: 2),
-      ),
-    );
+    bool isValid = true;
+
+    if (_nameController.text.trim().isEmpty) {
+      _nameError = 'Required';
+      isValid = false;
+    }
+    if (_emailController.text.trim().isEmpty) {
+      _emailError = 'Required';
+      isValid = false;
+    }
+    if (_phoneController.text.trim().isEmpty) {
+      _phoneError = 'Required';
+      isValid = false;
+    }
+
+    if (!_hasMinLength || !_hasNumber || !_hasUpperAndLower) {
+      _passwordError = 'Please meet all password requirements';
+      isValid = false;
+    } else if (_passwordController.text != _confirmPasswordController.text) {
+      _passwordError = 'Passwords do not match';
+      isValid = false;
+    }
+
+    if (!_agreedToTerms) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('You must agree to the terms.')));
+      isValid = false;
+    }
+
+    if (!isValid) return;
+
+    setState(() => _isLoading = true);
+
+    try {
+      List<String> nameParts = _nameController.text.trim().split(' ');
+      String firstName = nameParts[0];
+      String lastName = nameParts.length > 1 ? nameParts.sublist(1).join(' ') : '';
+
+      String fullPhone = _selectedCountryCode + _phoneController.text.trim();
+
+      UserCredential userCredential = await FirebaseAuth.instance.createUserWithEmailAndPassword(
+        email: _emailController.text.trim(),
+        password: _passwordController.text,
+      );
+      await userCredential.user!.sendEmailVerification();
+
+      final userData = {
+        "firstName": firstName,
+        "lastName": lastName,
+        "email": _emailController.text.trim(),
+        "phone": fullPhone,
+        "gender": _genderController.text,
+        "createdAt": FieldValue.serverTimestamp(),
+      };
+
+      await FirebaseFirestore.instance.collection('Users').doc(userCredential.user!.uid).set(userData);
+
+      if (mounted) {
+        Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const VerifyEmailScreen()));
+      }
+    } on FirebaseAuthException catch (e) {
+      setState(() {
+        if (e.code == 'email-already-in-use') {
+          _emailError = 'An account already exists for that email.';
+        } else {
+          _emailError = e.message;
+        }
+      });
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e')));
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
   }
 }
