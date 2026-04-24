@@ -48,4 +48,4 @@ This repository contains the complete frontend and integrated Firebase backend f
 ## 🔒 Companion Admin Dashboard
 To manage this application, a dedicated web-responsive Admin Dashboard was built to moderate listings, track platform statistics, and manage categories. 
 
-👉 **[View the Admin Panel Repository Here](LINK_TO_YOUR_NEW_ADMIN_REPO)**
+👉 **[View the Admin Panel Repository Here](https://github.com/Ismailcyp/FoundIt_admin_panel)**
