@@ -5,7 +5,7 @@
 ![Firebase](https://img.shields.io/badge/Firebase-FFCA28?style=for-the-badge&logo=firebase&logoColor=white)
 ![UI/UX](https://img.shields.io/badge/UI%2FUX-Premium_Design-00C853?style=for-the-badge)
 
-A comprehensive, modern classifieds and marketplace application. **FoundIt** is designed to be the ultimate local hub where users can buy, sell, and rent absolutely anything—from real estate and vehicles to electronics, furniture, and local services.
+A comprehensive, modern classifieds and marketplace application. **FoundIt** is designed to be the ultimate local hub where users can buy, sell, and rent absolutely anything from real estate and vehicles to electronics, furniture, and local services.
 
 This repository contains the complete frontend and integrated Firebase backend for the main consumer application, featuring a dynamic category system, secure user authentication, and a responsive marketplace feed.
 
